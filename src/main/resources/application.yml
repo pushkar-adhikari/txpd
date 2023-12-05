@@ -1,0 +1,30 @@
+spring:
+  application:
+    name: TX Process Dashboard
+  mvc:
+    pathmatch:
+      matching-strategy: ant-path-matcher
+
+server:
+  port: 8001
+  
+springdoc:
+  packages-to-scan: info.pushkaradhikari
+  paths-to-match: /**
+
+logging:
+  level:
+    root: INFO
+    '[org.springframework]': INFO
+    '[org.apache.kafka.clients.consumer.ConsumerConfig]': OFF
+
+txpd:
+  result:
+    location: /Users/pushkaradhikari/studies/thesis/txpd/output/
+  kafka-config:
+    bootstrap-servers: localhost:9092
+    topic: log_replay
+    group-id: txpd
+    auto-offset-reset: latest
+    enable-auto-commit: false
+    
