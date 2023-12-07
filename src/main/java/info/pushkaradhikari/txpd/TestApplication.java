@@ -3,17 +3,19 @@ package info.pushkaradhikari.txpd;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Map;
 
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 
 import beamline.events.BEvent;
 import beamline.graphviz.Dot;
-import beamline.miners.trivial.DirectlyFollowsDependencyDiscoveryMiner;
 import beamline.miners.trivial.ProcessMap;
 import beamline.sources.XesLogSource;
 import guru.nidi.graphviz.engine.Graphviz;
 import guru.nidi.graphviz.engine.GraphvizV8Engine;
+import info.pushkaradhikari.beamline.custom.CustomDFDDiscoveryMiner;
+import info.pushkaradhikari.beamline.custom.MultiProcessMap;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -44,8 +46,8 @@ public class TestApplication {
 		XesLogSource source = new XesLogSource(in_folder + fileName);
 
 		// step 2: configuration of the algorithm
-		DirectlyFollowsDependencyDiscoveryMiner miner = new DirectlyFollowsDependencyDiscoveryMiner();
-		miner.setMinDependency(0.3);
+		CustomDFDDiscoveryMiner miner = new CustomDFDDiscoveryMiner();
+		miner.setMinDependency(0.3).setModelRefreshRate(1);
 
 		// step 3: construction of the dataflow from the environment
 		StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
@@ -53,12 +55,16 @@ public class TestApplication {
 				.addSource(source)
 				.keyBy(BEvent::getProcessName)
 				.flatMap(miner)
-				.addSink(new SinkFunction<ProcessMap>() {
-					public void invoke(ProcessMap value, Context context) throws Exception {
-						Dot dot = value.generateDot();
-						Graphviz.useEngine(new GraphvizV8Engine());
-						dot.exportToSvg(new File(out_folder + fileName.replace(".xes", "_XES_SOURCE.svg")));
-						// dot.exportToFile(new File(out_folder + fileName.replace(".xes", ".dot")));
+				.addSink(new SinkFunction<MultiProcessMap>() {
+					public void invoke(MultiProcessMap value, Context context) throws Exception {
+						Map<String,Dot> dots = value.generateDot();
+						for (Map.Entry<String, Dot> entry : dots.entrySet()) {
+							String processName = entry.getKey();
+							Dot dot = entry.getValue();
+							Graphviz.useEngine(new GraphvizV8Engine());
+							dot.exportToSvg(new File(out_folder + processName + "_XES_SOURCE.svg"));
+							dot.exportToFile(new File(out_folder + processName + "_XES_SOURCE.dot"));
+						}
 					};
 				});
 

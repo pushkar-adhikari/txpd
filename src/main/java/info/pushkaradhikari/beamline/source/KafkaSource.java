@@ -48,11 +48,11 @@ public class KafkaSource extends BeamlineAbstractSource implements CheckpointedF
 	@Override
     public void run(SourceContext<BEvent> ctx) throws Exception {
 		KafkaConfig kafkaConfig = txpdProperties.getKafkaConfig();
-		while (isRunning()) {
-			consumer = createKafkaConsumer(kafkaConfig);
-			log.info(uuid + " - Subscribing to topic: " + kafkaConfig.getTopic());
-			consumer.subscribe(Collections.singletonList(kafkaConfig.getTopic()));
-			try {
+		consumer = createKafkaConsumer(kafkaConfig);
+		log.info(uuid + " - Subscribing to topic: " + kafkaConfig.getTopic());
+		consumer.subscribe(Collections.singletonList(kafkaConfig.getTopic()));
+		try {
+			while (isRunning()) {
 				ConsumerRecords<String, JsonNode> records = consumer.poll(Duration.ofMillis(Long.MAX_VALUE));
 				log.info(uuid + " - Received " + records.count() + " records");
 				for (ConsumerRecord<String, JsonNode> record : records) {
@@ -65,9 +65,9 @@ public class KafkaSource extends BeamlineAbstractSource implements CheckpointedF
 						}
 					}
 				}
-			} finally {
-				consumer.close();
 			}
+		} finally {
+			consumer.close();
 		}
     }
 
@@ -78,7 +78,7 @@ public class KafkaSource extends BeamlineAbstractSource implements CheckpointedF
 		props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, kafkaConfig.getAutoOffsetReset());
-		props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 1);
+		// props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 1);
         return new KafkaConsumer<>(props);
 	}
 
@@ -89,10 +89,10 @@ public class KafkaSource extends BeamlineAbstractSource implements CheckpointedF
 			String projectName = jsonNode.get("ProjectName").asText();
 			String packageName = jsonNode.get("PackageName").asText();
 			String packageLogId = jsonNode.get("PackageLogId").asText();
-			// String packageLogDetailName = jsonNode.get("PackageLogDetailName").asText();
-			String packageLogDetailName = jsonNode.get("DetailStepAction").asText();
+			String packageLogDetailName = jsonNode.get("PackageLogDetailName").asText();
+			//String packageLogDetailName = jsonNode.get("DetailStepAction").asText();
 			String processName = projectName + "_" + packageName;
-			BEvent event = new BEvent(processName, processName, packageLogDetailName);
+			BEvent event = new BEvent(processName, packageLogId, packageLogDetailName);
 			return event;
 		} catch (Exception e) {
 			log.error(uuid + " - Error JSON...", e);
