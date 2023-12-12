@@ -4,6 +4,7 @@ services:
     image: confluentinc/cp-zookeeper:latest
     hostname: zookeeper
     container_name: zookeeper
+    restart: always
     ports:
       - '2181:2181'
     environment:
@@ -14,6 +15,7 @@ services:
     image: confluentinc/cp-kafka:latest
     hostname: kafka
     container_name: kafka
+    restart: always
     depends_on:
       - zookeeper
     ports:
@@ -38,6 +40,7 @@ services:
     image: confluentinc/cp-schema-registry:latest
     hostname: schema-registry
     container_name: schema-registry
+    restart: always
     depends_on:
       - kafka
     ports:
@@ -52,6 +55,7 @@ services:
     image: confluentinc/cp-kafka-connect:latest
     hostname: connect
     container_name: connect
+    restart: always
     depends_on:
       - kafka
       - schema-registry
@@ -73,3 +77,34 @@ services:
       CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: http://schema-registry:8081
       CONNECT_PLUGIN_PATH: '/usr/share/java,/usr/share/confluent-hub-components'
       CONNECT_LOG4J_LOGGERS: org.apache.zookeeper=ERROR,org.I0Itec.zkclient=ERROR,org.reflections=ERROR
+  
+  influxdb:
+    image: influxdb:1.8-alpine
+    container_name: influxdb
+    restart: always
+    ports:
+      - '8086:8086'
+    volumes:
+      - influxdb-data:/var/lib/influxdb
+    environment:
+      - INFLUXDB_DB="txpd-metrics"
+      - INFLUXDB_ADMIN_USER=admin
+      - INFLUXDB_ADMIN_PASSWORD=adminpassword
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: always
+    ports:
+      - "3000:3000"
+    depends_on:
+      - influxdb
+    volumes:
+      - grafana-data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=adminpassword
+
+volumes:
+  influxdb-data:
+  grafana-data:

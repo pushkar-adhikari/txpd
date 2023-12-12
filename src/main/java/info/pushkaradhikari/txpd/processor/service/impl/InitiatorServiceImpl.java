@@ -11,8 +11,8 @@ import lombok.extern.slf4j.Slf4j;
 @TXPDService("initiatorService")
 public class InitiatorServiceImpl implements InitiatorService {
 
-    final TXPDProperties txpdProperties;
-    final KafkaSource kafkaSource;
+    private final TXPDProperties txpdProperties;
+    private final KafkaSource kafkaSource;
 
     public InitiatorServiceImpl(
             TXPDProperties txpdProperties,

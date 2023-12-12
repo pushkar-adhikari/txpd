@@ -199,7 +199,12 @@
 			<artifactId>discovery-heuristics</artifactId>
 			<version>master-SNAPSHOT</version>
 		</dependency>
-				
+
+		<dependency>
+			<groupId>org.influxdb</groupId>
+			<artifactId>influxdb-java</artifactId>
+			<version>2.23</version>
+		</dependency>
 		
 	</dependencies>
 

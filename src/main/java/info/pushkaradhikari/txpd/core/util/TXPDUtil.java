@@ -1,5 +1,7 @@
-package info.pushkaradhikari.txpd.core;
+package info.pushkaradhikari.txpd.core.util;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -16,6 +18,10 @@ public class TXPDUtil {
 
 	public static boolean isNumeric(String str) {
 		return str.matches("-?\\d+(\\.\\d+)?"); // match a number with optional '-' and decimal.
+	}
+
+	public static long toEpochMilli(LocalDateTime localDateTime) {
+		return localDateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
 	}
 
 }

@@ -74,7 +74,7 @@ public class KafkaSource extends BeamlineAbstractSource implements CheckpointedF
 	private KafkaConsumer<String, JsonNode> createKafkaConsumer(KafkaConfig kafkaConfig) {
 		Properties props = new Properties();
 		props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaConfig.getBootstrapServers());
-        props.put(ConsumerConfig.GROUP_ID_CONFIG, kafkaConfig.getGroupId());
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, kafkaConfig.getGroups().getMiner());
 		props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, kafkaConfig.getAutoOffsetReset());

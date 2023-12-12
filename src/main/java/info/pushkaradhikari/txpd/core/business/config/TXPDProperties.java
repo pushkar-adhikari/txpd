@@ -25,6 +25,9 @@ public class TXPDProperties implements Serializable {
     @Valid
     private KafkaConfig kafkaConfig;
 
+    @Valid
+    private InfluxConfig influxConfig;
+
     @Getter
     @Setter
     public static class Result implements Serializable {
@@ -46,15 +49,48 @@ public class TXPDProperties implements Serializable {
 
         @NotBlank
         private String topic;
-        
-        @NotBlank
-        private String groupId;
 
         @NotBlank
         private String autoOffsetReset;
 
         @NotBlank
         private String enableAutoCommit;
+        
+        @Valid
+        private Groups groups;
+        
+        @Getter
+        @Setter
+        public static class Groups implements Serializable {
+        	
+        	private static final long serialVersionUID = 1L;
+        	
+        	@NotBlank
+            private String miner;
+
+            @NotBlank
+            private String processor;
+        	
+        }
+    }
+
+    @Getter
+    @Setter
+    public static class InfluxConfig implements Serializable {
+
+        private static final long serialVersionUID = 1L;
+
+        @NotBlank
+        private String url;
+
+        @NotBlank
+        private String username;
+
+        @NotBlank
+        private String password;
+
+        @NotBlank
+        private String database;
     }
 
 }

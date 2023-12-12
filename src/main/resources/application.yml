@@ -24,7 +24,13 @@ txpd:
   kafka-config:
     bootstrap-servers: localhost:9092
     topic: log_replay
-    group-id: txpd
     auto-offset-reset: latest
     enable-auto-commit: false
-    
+    groups:
+      miner: txpd-miner
+      processor: txpd-processor
+  influx-config:
+    url: http://localhost:8086
+    database: txpd-metrics
+    username: admin
+    password: adminpassword

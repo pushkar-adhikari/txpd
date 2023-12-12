@@ -1,4 +1,4 @@
-package info.pushkaradhikari.txpd.core;
+package info.pushkaradhikari.txpd.core.util;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;

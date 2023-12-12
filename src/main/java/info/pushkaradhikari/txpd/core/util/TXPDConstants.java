@@ -1,4 +1,4 @@
-package info.pushkaradhikari.txpd.core;
+package info.pushkaradhikari.txpd.core.util;
 
 public class TXPDConstants {
 
