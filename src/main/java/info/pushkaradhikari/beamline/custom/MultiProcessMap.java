@@ -9,9 +9,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import beamline.graphviz.Dot;
-import beamline.miners.trivial.ProcessMap;
 import beamline.miners.trivial.graph.ColorPalette;
-import beamline.miners.trivial.graph.PMDotModel;
 import beamline.models.responses.Response;
 import lombok.extern.slf4j.Slf4j;
 
@@ -35,9 +33,13 @@ public class MultiProcessMap extends Response {
         Map<String, Dot> dots = new HashMap<>();
         for (Map.Entry<String, ProcessMap> entry : processMaps.entrySet()) {
         	String processName = entry.getKey();
-        	if (updateChecks.get(processName)) {        		
-        		dots.put(processName, new PMDotModel(entry.getValue(), ColorPalette.Colors.BLUE));
-        		updateChecks.put(processName, false);
+        	if (updateChecks.get(processName)) {
+        		try {
+        			dots.put(processName, new DotModel(entry.getValue(), ColorPalette.Colors.BLUE));
+        			updateChecks.put(processName, false);
+        		} catch (Exception e) {
+        			log.error("Error creating dot file for process name: :" + processName, e);
+        		}
         	}
         }
         return dots;

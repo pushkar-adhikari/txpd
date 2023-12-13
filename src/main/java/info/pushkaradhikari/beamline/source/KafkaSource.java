@@ -78,13 +78,12 @@ public class KafkaSource extends BeamlineAbstractSource implements CheckpointedF
 		props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, kafkaConfig.getAutoOffsetReset());
-		// props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 1);
+		props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, kafkaConfig.getMaxPollRecords());
         return new KafkaConsumer<>(props);
 	}
 
 	private BEvent extractEvent(ConsumerRecord<String, JsonNode> record) {
         try {
-			log.info(uuid + " - Received message from kafka");
 			JsonNode jsonNode = record.value();
 			String projectName = jsonNode.get("ProjectName").asText();
 			String packageName = jsonNode.get("PackageName").asText();
@@ -126,41 +125,4 @@ public class KafkaSource extends BeamlineAbstractSource implements CheckpointedF
             }
         }
     }
-
-	// @Override
-	// public void run(SourceContext<BEvent> ctx) throws Exception {
-	// 	while (isRunning()) {
-	// 		synchronized (ctx.getCheckpointLock()) {
-	// 			while (isRunning() && buffer.isEmpty()) {
-	// 				log.info("Waiting for BEvent...");
-	// 				ctx.getCheckpointLock().wait(100); // use wait instead of sleep
-	// 			}
-	// 			if (isRunning() && !buffer.isEmpty()) {
-	// 				BEvent e = buffer.poll();
-    //                 log.info("BEvent received: " + e);
-	// 				ctx.collect(e);
-	// 			}
-	// 		}
-	// 	}
-	// }
-
-	// @KafkaListener(topics = "log_replay", groupId = "txpd")
-	// public void listen(JsonNode jsonNode) {
-	// 	try {
-	// 		log.info("Received message from kafka");
-	// 		String projectName = jsonNode.get("ProjectName").asText();
-	// 		String packageName = jsonNode.get("PackageName").asText();
-	// 		String packageLogId = jsonNode.get("PackageLogId").asText();
-	// 		String packageLogDetailName = jsonNode.get("PackageLogDetailName").asText();
-	// 		String processName = projectName + "_" + packageName;
-	// 		BEvent event = new BEvent(processName, packageLogId, packageLogDetailName);
-	// 		synchronized (buffer) {
-	// 			buffer.add(event);
-	// 			buffer.notifyAll();
-	// 			log.info("Notified source buffer with BEvent");
-	// 		}
-	// 	} catch (Exception e) {
-	// 		log.error("Error JSON...", e);
-	// 	}
-	// }
 }

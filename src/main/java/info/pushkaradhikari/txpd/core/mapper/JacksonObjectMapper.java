@@ -1,6 +1,5 @@
 package info.pushkaradhikari.txpd.core.mapper;
 
-import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;

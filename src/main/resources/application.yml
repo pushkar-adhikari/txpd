@@ -17,6 +17,7 @@ logging:
     root: INFO
     '[org.springframework]': INFO
     '[org.apache.kafka.clients.consumer.ConsumerConfig]': OFF
+#    '[info.pushkaradhikari.beamline.custom]': DEBUG
 
 txpd:
   result:
@@ -24,6 +25,7 @@ txpd:
   kafka-config:
     bootstrap-servers: localhost:9092
     topic: log_replay
+    max-poll-records: 50
     auto-offset-reset: latest
     enable-auto-commit: false
     groups:

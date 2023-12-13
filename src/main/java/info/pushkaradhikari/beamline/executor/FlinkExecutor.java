@@ -1,19 +1,21 @@
 package info.pushkaradhikari.beamline.executor;
 
-import java.io.File;
 import java.io.Serializable;
-import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
+import org.apache.flink.configuration.Configuration;
+import org.apache.flink.configuration.RestOptions;
+import org.apache.flink.configuration.TaskManagerOptions;
+import org.apache.flink.streaming.api.datastream.AsyncDataStream;
+import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 
 import beamline.events.BEvent;
-import beamline.graphviz.Dot;
 import beamline.sources.BeamlineAbstractSource;
-import guru.nidi.graphviz.engine.Graphviz;
-import guru.nidi.graphviz.engine.GraphvizV8Engine;
+import info.pushkaradhikari.beamline.custom.AsyncPostProcessor;
 import info.pushkaradhikari.beamline.custom.CustomDFDDiscoveryMiner;
 import info.pushkaradhikari.beamline.custom.MultiProcessMap;
+import info.pushkaradhikari.txpd.core.business.config.TXPDProperties;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -23,44 +25,37 @@ public class FlinkExecutor implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 	
-	private final GraphvizV8Engine engine = new GraphvizV8Engine();
-
-	public void run(String resultPath, BeamlineAbstractSource source) throws Exception {
+	public void run(TXPDProperties txpdProperties, BeamlineAbstractSource source) throws Exception {
 		log.info("Starting FlinkExecutor...");
 		
 		CustomDFDDiscoveryMiner miner = new CustomDFDDiscoveryMiner();
-		miner.setMinDependency(0.3).setModelRefreshRate(1);
+
+		final int parallelism = 1;
+		final Configuration configuration = new Configuration();
+		configuration.setInteger(TaskManagerOptions.NUM_TASK_SLOTS, 2);
+		configuration.setInteger(RestOptions.PORT, 8082);
 		
-		StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-		env.setParallelism(1)
-				.enableCheckpointing(10000)
-				.addSource(source)
-				.keyBy(BEvent::getProcessName)
-				.flatMap(miner)
-				.addSink(new MultiProcessMapSink(resultPath));
+		StreamExecutionEnvironment env = StreamExecutionEnvironment.createLocalEnvironment(parallelism, configuration);
+		
+		env.enableCheckpointing(300000);
+		env.getCheckpointConfig().setMinPauseBetweenCheckpoints(60000);
+		env.getCheckpointConfig().setCheckpointTimeout(60000);
+		env.getCheckpointConfig().setMaxConcurrentCheckpoints(1);
+		env.getCheckpointConfig().setTolerableCheckpointFailureNumber(10);
+		
+		
+		DataStream<MultiProcessMap> processMapStream = env.setParallelism(1)
+			.addSource(source)
+			.keyBy(BEvent::getProcessName)
+			.flatMap(miner);
+		
+		AsyncDataStream.orderedWait(
+	        processMapStream,
+	        new AsyncPostProcessor(txpdProperties),
+	        30000, TimeUnit.MILLISECONDS,
+	        1
+	    );
 
 		env.execute();
-	}
-	
-	private final class MultiProcessMapSink implements SinkFunction<MultiProcessMap> {
-		private static final long serialVersionUID = -1655184285808454692L;
-		private final String resultPath;
-
-		private MultiProcessMapSink(String resultPath) {
-			this.resultPath = resultPath;
-		}
-
-		public void invoke(MultiProcessMap value, Context context) throws Exception {
-			log.info("Process map: {}", value);
-			Map<String,Dot> dots = value.generateDot();
-			for (Map.Entry<String, Dot> entry : dots.entrySet()) {
-				String processName = entry.getKey();
-				Dot dot = entry.getValue();
-				log.info("Starting export for process: {}", processName);
-				Graphviz.useEngine(engine);
-				dot.exportToSvg(new File(resultPath + processName + ".svg"));
-				dot.exportToFile(new File(resultPath + processName + ".dot"));
-			}
-		}
 	}
 }

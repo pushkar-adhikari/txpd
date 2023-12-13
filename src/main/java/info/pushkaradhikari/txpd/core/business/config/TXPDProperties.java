@@ -4,6 +4,7 @@ import java.io.Serializable;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
@@ -58,6 +59,9 @@ public class TXPDProperties implements Serializable {
         
         @Valid
         private Groups groups;
+        
+        @NotNull
+        private int maxPollRecords;
         
         @Getter
         @Setter

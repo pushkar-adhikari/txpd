@@ -1,8 +1,8 @@
 package info.pushkaradhikari.beamline.custom;
 
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.Map.Entry;
@@ -12,7 +12,6 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
 import beamline.events.BEvent;
-import beamline.miners.trivial.ProcessMap;
 import beamline.models.algorithms.StreamMiningAlgorithm;
 
 public class CustomDFDDiscoveryMiner extends StreamMiningAlgorithm<MultiProcessMap> {
@@ -47,7 +46,7 @@ public class CustomDFDDiscoveryMiner extends StreamMiningAlgorithm<MultiProcessM
 			map = multiProcessMap.getProcessMap(processName);
 			map = miner.ingest(event, map);
 		} else {
-			map = miner.ingest(event, new ProcessMap());
+			map = miner.ingest(event, new ProcessMap(processName));
 		}
 		if (map != null) {
 			multiProcessMap.addProcessMap(processName, map);
@@ -59,15 +58,15 @@ public class CustomDFDDiscoveryMiner extends StreamMiningAlgorithm<MultiProcessM
 	private class Miner implements Serializable {
 
 		private static final long serialVersionUID = -1788972505878844643L;
-		private Map<String, String> lastCaseIdForActivity = new HashMap<>();
-		private Map<String, String> latestActivityInCase = new HashMap<>();
-		private Map<Pair<String, String>, Double> relations = new HashMap<>();
-		private Map<String, Double> activities = new HashMap<>();
-		private Map<String, Double> startingActivities = new HashMap<>();
+		private Map<String, String> lastCaseIdForActivity = new LinkedHashMap<>();
+		private Map<String, String> latestActivityInCase = new LinkedHashMap<>();
+		private Map<Pair<String, String>, Double> relations = new LinkedHashMap<>();
+		private Map<String, Double> activities = new LinkedHashMap<>();
+		private Map<String, Double> startingActivities = new LinkedHashMap<>();
 		private Double maxActivityFreq = 1d;
 		private Double maxRelationsFreq = 1d;
-		private double minDependency = 0.8;
-		private int modelRefreshRate = 10;
+		private double minDependency = 0.01;
+		private int modelRefreshRate = 1;
 
 		public Miner() {
 		}
@@ -119,14 +118,19 @@ public class CustomDFDDiscoveryMiner extends StreamMiningAlgorithm<MultiProcessM
 		}
 
 		public ProcessMap mine(double threshold, ProcessMap process) {
-			for (Entry<String, Double> entry : activities.entrySet()) {
-				process.addActivity(entry.getKey(), entry.getValue() / maxActivityFreq, entry.getValue());
+			for (Entry<String, Double> entry : activities.entrySet()) { 
+				String activity = entry.getKey();
+		        Double frequency = entry.getValue();
+		        process.addActivity(activity, frequency / maxActivityFreq, frequency);
 			}
 			if (activities.size() == 1 && relations.isEmpty()) {
 				String soleActivity = activities.keySet().iterator().next();
 				process.addStartingActivity(soleActivity);
 				process.addEndActivity(soleActivity);
 			} else {
+				if (relations.size() == 1) {
+					process.clearEndActivities();
+				}
 				for (Entry<Pair<String, String>, Double> entry : relations.entrySet()) {
 					double dependency = entry.getValue() / maxRelationsFreq;
 					if (dependency >= threshold) {
@@ -134,8 +138,8 @@ public class CustomDFDDiscoveryMiner extends StreamMiningAlgorithm<MultiProcessM
 								entry.getValue());
 					}
 				}
-				Set<String> toRemove = new HashSet<>();
-				Set<String> selfLoopsToRemove = new HashSet<>();
+				Set<String> toRemove = new LinkedHashSet<>();
+				Set<String> selfLoopsToRemove = new LinkedHashSet<>();
 				for (String activity : activities.keySet()) {
 					if (process.isStartActivity(activity) && process.isEndActivity(activity)) {
 						toRemove.add(activity);

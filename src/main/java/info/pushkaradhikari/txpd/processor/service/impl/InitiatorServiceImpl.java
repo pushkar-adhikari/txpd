@@ -1,5 +1,7 @@
 package info.pushkaradhikari.txpd.processor.service.impl;
 
+import org.influxdb.InfluxDB;
+
 import info.pushkaradhikari.beamline.executor.FlinkExecutor;
 import info.pushkaradhikari.beamline.source.KafkaSource;
 import info.pushkaradhikari.txpd.core.business.annotation.TXPDService;
@@ -16,7 +18,8 @@ public class InitiatorServiceImpl implements InitiatorService {
 
     public InitiatorServiceImpl(
             TXPDProperties txpdProperties,
-            KafkaSource kafkaSource) {
+            KafkaSource kafkaSource,
+            InfluxDB influxDB) {
         this.txpdProperties = txpdProperties;
         this.kafkaSource = kafkaSource;
     }
@@ -32,7 +35,7 @@ public class InitiatorServiceImpl implements InitiatorService {
         new Thread(() -> {
             try {
                 FlinkExecutor flinkExecutor = new FlinkExecutor();
-                flinkExecutor.run(txpdProperties.getResult().getLocation(), kafkaSource);
+                flinkExecutor.run(txpdProperties, kafkaSource);
             } catch (Exception e) {
                 log.error("Error initializing environment", e);
             }
