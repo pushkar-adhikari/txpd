@@ -22,6 +22,7 @@ logging:
 txpd:
   result:
     location: /Users/pushkaradhikari/studies/thesis/txpd/output/
+    enabled: true
   kafka-config:
     bootstrap-servers: localhost:9092
     topic: log_replay

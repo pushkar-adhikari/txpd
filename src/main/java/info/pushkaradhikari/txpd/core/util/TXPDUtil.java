@@ -23,5 +23,25 @@ public class TXPDUtil {
 	public static long toEpochMilli(LocalDateTime localDateTime) {
 		return localDateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
 	}
+	
+	public static String formatBreaks(String input) {
+        StringBuilder result = new StringBuilder();
+        int lineLength = 0;
+
+        for (String word : input.split(" ")) {
+            if (lineLength + word.length() > 30) {
+                result.append("<br/>");
+                lineLength = 0;
+            } else if (lineLength > 0) {
+                result.append(" ");
+                lineLength++;
+            }
+
+            result.append(word);
+            lineLength += word.length();
+        }
+
+        return result.toString();
+    }
 
 }

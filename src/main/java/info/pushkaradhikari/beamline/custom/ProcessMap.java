@@ -8,10 +8,10 @@ import java.util.Set;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
-import beamline.graphviz.Dot;
 import beamline.models.responses.GraphvizResponse;
+import info.pushkaradhikari.beamline.custom.dot.TXColorPalette.Colors;
+import info.pushkaradhikari.beamline.custom.dot.TxDotModel;
 import lombok.extern.slf4j.Slf4j;
-import beamline.miners.trivial.graph.ColorPalette;
 
 @Slf4j
 public class ProcessMap extends GraphvizResponse {
@@ -24,8 +24,8 @@ public class ProcessMap extends GraphvizResponse {
 	final String processName;
 
 	@Override
-	public Dot generateDot() {
-		return new DotModel(this, ColorPalette.Colors.BLUE);
+	public TxDotModel generateDot() {
+		return new TxDotModel(this, Colors.BLUE);
 	}
 
 	public ProcessMap(String processName) {
@@ -37,22 +37,22 @@ public class ProcessMap extends GraphvizResponse {
 	}
 
 	public void addActivity(String activityName, Double relativeFrequency, Double absoluteFrequency) {
-		log.debug(processName + " adding activity " + activityName + " with freq: " + relativeFrequency + ", " + absoluteFrequency);
+		log.trace(processName + " adding activity " + activityName + " with freq: " + relativeFrequency + ", " + absoluteFrequency);
 		this.activities.put(activityName, Pair.of(relativeFrequency, absoluteFrequency));
 	}
 
 	public void removeActivity(String activityName) {
-		log.debug(processName + " removing activity " + activityName);
+		log.trace(processName + " removing activity " + activityName);
 		this.activities.remove(activityName);
 	}
 
 	public void addRelation(String activitySource, String activityTarget, Double relativeFrequency, Double absoluteFrequency) {
-		log.debug(processName + " adding relation " + activitySource + ", " + activityTarget + " with freq: " + relativeFrequency + ", " + absoluteFrequency);
+		log.trace(processName + " adding relation " + activitySource + ", " + activityTarget + " with freq: " + relativeFrequency + ", " + absoluteFrequency);
 		relations.put(Pair.of(activitySource, activityTarget), Pair.of(relativeFrequency, absoluteFrequency));
 	}
 
 	public void removeRelation(String activitySource, String activityTarget) {
-		log.debug(processName + " removing relation " + activitySource + ", " + activityTarget);
+		log.trace(processName + " removing relation " + activitySource + ", " + activityTarget);
 		relations.remove(new ImmutablePair<String, String>(activitySource, activityTarget));
 	}
 
@@ -66,25 +66,25 @@ public class ProcessMap extends GraphvizResponse {
 	
 	public Double getActivityRelativeFrequency(String activity) {
 		Double result = this.activities.getOrDefault(activity, Pair.of(1d,1d)).getLeft();
-		log.debug(processName + " getActivityRelativeFrequency " + activity + ": " + result);
+		log.trace(processName + " getActivityRelativeFrequency " + activity + ": " + result);
 		return result;
 	}
 	
 	public Double getActivityAbsoluteFrequency(String activity) {
 		Double result = this.activities.getOrDefault(activity, Pair.of(1d,1d)).getRight();
-		log.debug(processName + " getActivityAbsoluteFrequency " + activity + ": " + result);
+		log.trace(processName + " getActivityAbsoluteFrequency " + activity + ": " + result);
 		return result;
 	}
 
 	public Double getRelationRelativeValue(Pair<String, String> relation) {
 		Double result = this.relations.get(relation).getLeft();
-		log.debug(processName + " getRelationRelativeValue " + relation + ": " + result);
+		log.trace(processName + " getRelationRelativeValue " + relation + ": " + result);
 		return result;
 	}
 	
 	public Double getRelationAbsoluteValue(Pair<String, String> relation) {
 		Double result = this.relations.get(relation).getRight();
-		log.debug(processName + " getRelationAbsoluteValue " + relation + ": " + result);
+		log.trace(processName + " getRelationAbsoluteValue " + relation + ": " + result);
 		return result;
 	}
 
@@ -95,7 +95,7 @@ public class ProcessMap extends GraphvizResponse {
 				result.add(relation.getLeft());
 			}
 		}
-		log.debug(processName + " IncomingActivities for " + candidate + ":" + result);
+		log.trace(processName + " IncomingActivities for " + candidate + ":" + result);
 		return result;
 	}
 
@@ -106,45 +106,57 @@ public class ProcessMap extends GraphvizResponse {
 				result.add(relation.getRight());
 			}
 		}
-		log.debug(processName + " OutgoingActivities for " + candidate + ":" + result);
+		log.trace(processName + " OutgoingActivities for " + candidate + ":" + result);
 		return result;
 	}
 	
 	public void addStartingActivity(String activity) {
-		log.debug(processName + " addStartingActivity " + activity);
+		log.trace(processName + " addStartingActivity " + activity);
 		startingActivities.add(activity);
 	}
 	
 	public void clearStartingActivities() {
-		log.debug(processName + " clearStartingActivities ");
+		log.trace(processName + " clearStartingActivities ");
 		startingActivities.clear();
 	}
 	
+	public Set<String> getStartingActivities() {
+		return startingActivities;
+	}
+	
 	public void addEndActivity(String activity) {
-		log.debug(processName + " addEndActivity " + activity);
+		log.trace(processName + " addEndActivity " + activity);
 		endingActivities.add(activity);
 	}
 	
 	public void clearEndActivities() {
-		log.debug(processName + " clearEndActivities ");
+		log.trace(processName + " clearEndActivities ");
 		endingActivities.clear();
+	}
+	
+	public Set<String> getEndActivities() {
+		return endingActivities;
 	}
 
 	public boolean isStartActivity(String candidate) {
 		Boolean result = getIncomingActivities(candidate).isEmpty() || startingActivities.contains(candidate);
-		log.debug(processName + " isStartActivity " + candidate + ": " + result);
+		log.trace(processName + " isStartActivity " + candidate + ": " + result);
 		return result;
 	}
 
 	public boolean isEndActivity(String candidate) {
 		Boolean result = getOutgoingActivities(candidate).isEmpty() || endingActivities.contains(candidate);
-		log.debug(processName + " isEndActivity " + candidate + ": " + result);
+		log.trace(processName + " isEndActivity " + candidate + ": " + result);
 		return result;
 	}
 
 	public boolean isIsolatedNode(String candidate) {
 		Boolean result = getOutgoingActivities(candidate).equals(getIncomingActivities(candidate));
-		log.debug(processName + " isIsolatedNode " + candidate + ": " + result);
+		log.trace(processName + " isIsolatedNode " + candidate + ": " + result);
 		return result;
+	}
+	
+	public String getProcessName() {
+		return processName;
 	}
 }

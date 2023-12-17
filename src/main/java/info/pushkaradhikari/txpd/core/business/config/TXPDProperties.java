@@ -37,6 +37,10 @@ public class TXPDProperties implements Serializable {
 
         @NotBlank
         private String location;
+        
+        private boolean enabled;
+        
+        
     }
 
     @Getter

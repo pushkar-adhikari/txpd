@@ -19,40 +19,21 @@ public class CustomDFDDiscoveryMiner extends StreamMiningAlgorithm<MultiProcessM
 	private static final long serialVersionUID = -6688122589937218288L;
 	private MultiProcessMap multiProcessMap = new MultiProcessMap();
 	private Map<String, Miner> miners = new ConcurrentHashMap<>();
-	private double minDependency = 0.8;
-	private int modelRefreshRate = 3;
-
-	public CustomDFDDiscoveryMiner setMinDependency(double minDependency) {
-		this.minDependency = minDependency;
-		return this;
-	}
-
-	public CustomDFDDiscoveryMiner setModelRefreshRate(int modelRefreshRate) {
-		this.modelRefreshRate = modelRefreshRate;
-		return this;
-	}
 
 	@Override
 	public MultiProcessMap ingest(BEvent event) {
 		String processName = event.getProcessName();
-		miners.computeIfAbsent(processName, k -> {
-			Miner miner = new Miner();
-			miner.setMinDependency(minDependency).setModelRefreshRate(modelRefreshRate);
-			return miner;
+		String caseID = event.getTraceName();
+		Miner miner = miners.computeIfAbsent(caseID, k -> {
+			return new Miner();
 		});
-		Miner miner = miners.get(processName);
-		ProcessMap map;
-		if (multiProcessMap.checkProcessMap(processName)) {
-			map = multiProcessMap.getProcessMap(processName);
-			map = miner.ingest(event, map);
-		} else {
-			map = miner.ingest(event, new ProcessMap(processName));
-		}
-		if (map != null) {
-			multiProcessMap.addProcessMap(processName, map);
-			return multiProcessMap;
-		}
-		return null;
+		ProcessMap individualMap = multiProcessMap.getIndividualProcessMap(processName, caseID);
+		individualMap = miner.ingest(event, individualMap);
+		if (individualMap != null) {
+            multiProcessMap.addProcessMap(processName, caseID, individualMap);
+        }
+		multiProcessMap.generateDot();
+		return multiProcessMap;
 	}
 
 	private class Miner implements Serializable {
@@ -69,16 +50,6 @@ public class CustomDFDDiscoveryMiner extends StreamMiningAlgorithm<MultiProcessM
 		private int modelRefreshRate = 1;
 
 		public Miner() {
-		}
-
-		public Miner setMinDependency(double minDependency) {
-			this.minDependency = minDependency;
-			return this;
-		}
-
-		public Miner setModelRefreshRate(int modelRefreshRate) {
-			this.modelRefreshRate = modelRefreshRate;
-			return this;
 		}
 
 		public ProcessMap ingest(BEvent event, ProcessMap oldMap) {

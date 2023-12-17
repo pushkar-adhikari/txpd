@@ -1,4 +1,6 @@
-package info.pushkaradhikari.beamline.custom;
+package info.pushkaradhikari.beamline.custom.dot;
+
+import static info.pushkaradhikari.txpd.core.util.TXPDUtil.formatBreaks;
 
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -9,21 +11,19 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import beamline.graphviz.Dot;
 import beamline.graphviz.DotNode;
-import beamline.miners.trivial.graph.ColorPalette;
-import beamline.miners.trivial.graph.PMDotEdge;
-import beamline.miners.trivial.graph.PMDotEndNode;
-import beamline.miners.trivial.graph.PMDotNode;
-import beamline.miners.trivial.graph.PMDotStartNode;
+import info.pushkaradhikari.beamline.custom.ProcessMap;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class DotModel extends Dot {
+public class TxDotModel extends Dot {
 
 	private static final long serialVersionUID = -5125589037558963924L;
 	private ProcessMap model;
-	private ColorPalette.Colors activityColor;
+	private boolean caseSpecific = false;
+	private String caseId;
+	private TXColorPalette.Colors activityColor;
 
-	public DotModel(ProcessMap model, ColorPalette.Colors activityColor) {
+	public TxDotModel(ProcessMap model, TXColorPalette.Colors activityColor) {
 		this.model = model;
 		this.activityColor = activityColor;
 
@@ -46,8 +46,8 @@ public class DotModel extends Dot {
 		// add all activities
 		for (String activity : model.getActivities()) {
 			DotNode node = addNodeIfNeeded(activity, activityToNode, nodeToActivity);
-			if (node instanceof PMDotNode) {
-				((PMDotNode) node).setColorWeight(model.getActivityRelativeFrequency(activity), activityColor);
+			if (node instanceof TxDotNode) {
+				((TxDotNode) node).setColorWeight(model.getActivityRelativeFrequency(activity), activityColor);
 			}
 			if (model.isStartActivity(activity)) {
 				startNodes.add(node);
@@ -56,9 +56,9 @@ public class DotModel extends Dot {
 				endNodes.add(node);
 			}
 		}
-		log.debug(model.processName + " realize() nodes" + super.getNodes());
-		log.debug(model.processName + " realize() start nodes" + startNodes);
-		log.debug(model.processName + " realize() end nodes" + endNodes);
+		log.trace(model.getProcessName() + " realize() nodes" + super.getNodes());
+		log.trace(model.getProcessName() + " realize() start nodes" + startNodes);
+		log.trace(model.getProcessName() + " realize() end nodes" + endNodes);
 
 		// add all relations
 		for (Pair<String, String> relation : model.getRelations()) {
@@ -74,18 +74,18 @@ public class DotModel extends Dot {
 			addRelation(sourceNode, targetNode, model.getRelationRelativeValue(relation),
 					model.getRelationAbsoluteValue(relation));
 		}
-		log.debug(model.processName + " realize() edges" + super.getEdges());
+		log.trace(model.getProcessName() + " realize() edges" + super.getEdges());
 
 		// add relations from start and end
 		if (!startNodes.isEmpty()) {
-			PMDotStartNode start = new PMDotStartNode();
+			TxDotStartNode start = new TxDotStartNode();
 			addNode(start);
 			for (DotNode n : startNodes) {
 				addRelation(start, n, null, null);
 			}
 		}
 		if (!endNodes.isEmpty()) {
-			PMDotEndNode end = new PMDotEndNode();
+			TxDotEndNode end = new TxDotEndNode();
 			addNode(end);
 			for (DotNode n : endNodes) {
 				addRelation(n, end, null, null);
@@ -99,14 +99,15 @@ public class DotModel extends Dot {
 		if (relativeFrequency != null && absoluteFrequency != null) {
 			freqLabel = String.format("%.2g ", relativeFrequency) + "(" + absoluteFrequency.intValue() + ")";
 		}
-		addEdge(new PMDotEdge(sourceNode, targetNode, freqLabel, relativeFrequency));
+		addEdge(new TxDotEdge(sourceNode, targetNode, freqLabel, relativeFrequency));
 	}
 
 	private DotNode addNodeIfNeeded(String activity, Map<String, DotNode> activityToNode,
 			Map<String, String> nodeToActivity) {
 		DotNode existingNode = activityToNode.get(activity);
 		if (existingNode == null) {
-			PMDotNode newNode = new PMDotNode(activity.toString());
+			String label = formatBreaks(activity.toString());
+			TxDotNode newNode = new TxDotNode(label);
 			newNode.setColorWeight(model.getActivityRelativeFrequency(activity), activityColor);
 			newNode.setSecondLine(String.format("%.2g%n", model.getActivityRelativeFrequency(activity)) + " ("
 					+ model.getActivityAbsoluteFrequency(activity).intValue() + ")");
@@ -117,5 +118,23 @@ public class DotModel extends Dot {
 		} else {
 			return existingNode;
 		}
+	}
+	
+	public TxDotModel setCaseSpecific(boolean caseSpecific, String caseId) {
+		this.caseSpecific = caseSpecific;
+		this.caseId = caseId;
+		return this;
+	}
+	
+	public String getCaseId() {
+		return caseId;
+	}
+	
+	public boolean isCaseSpecific() {
+		return caseSpecific;
+	}
+	
+	public ProcessMap getModel() {
+		return model;
 	}
 }

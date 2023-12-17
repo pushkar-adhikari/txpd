@@ -12,7 +12,6 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
 import beamline.events.BEvent;
 import beamline.sources.BeamlineAbstractSource;
-import info.pushkaradhikari.beamline.custom.AsyncPostProcessor;
 import info.pushkaradhikari.beamline.custom.CustomDFDDiscoveryMiner;
 import info.pushkaradhikari.beamline.custom.MultiProcessMap;
 import info.pushkaradhikari.txpd.core.business.config.TXPDProperties;
@@ -28,8 +27,6 @@ public class FlinkExecutor implements Serializable {
 	public void run(TXPDProperties txpdProperties, BeamlineAbstractSource source) throws Exception {
 		log.info("Starting FlinkExecutor...");
 		
-		CustomDFDDiscoveryMiner miner = new CustomDFDDiscoveryMiner();
-
 		final int parallelism = 1;
 		final Configuration configuration = new Configuration();
 		configuration.setInteger(TaskManagerOptions.NUM_TASK_SLOTS, 2);
@@ -37,23 +34,23 @@ public class FlinkExecutor implements Serializable {
 		
 		StreamExecutionEnvironment env = StreamExecutionEnvironment.createLocalEnvironment(parallelism, configuration);
 		
-		env.enableCheckpointing(300000);
+		env.enableCheckpointing(30000);
 		env.getCheckpointConfig().setMinPauseBetweenCheckpoints(60000);
 		env.getCheckpointConfig().setCheckpointTimeout(60000);
 		env.getCheckpointConfig().setMaxConcurrentCheckpoints(1);
-		env.getCheckpointConfig().setTolerableCheckpointFailureNumber(10);
+		env.getCheckpointConfig().setTolerableCheckpointFailureNumber(1000);
 		
 		
-		DataStream<MultiProcessMap> processMapStream = env.setParallelism(1)
+		DataStream<MultiProcessMap> dotsStream = env.setParallelism(1)
 			.addSource(source)
 			.keyBy(BEvent::getProcessName)
-			.flatMap(miner);
+			.flatMap(new CustomDFDDiscoveryMiner());
 		
 		AsyncDataStream.orderedWait(
-	        processMapStream,
-	        new AsyncPostProcessor(txpdProperties),
-	        30000, TimeUnit.MILLISECONDS,
-	        1
+			dotsStream,
+	        new AsyncDotProcessor(txpdProperties),
+	        300000, TimeUnit.MILLISECONDS,
+	        15
 	    );
 
 		env.execute();

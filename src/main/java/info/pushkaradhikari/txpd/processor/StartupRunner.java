@@ -23,6 +23,6 @@ public class StartupRunner {
     @PostConstruct
     public void startServices() throws Exception {
         initiatorService.run();
-//        metricsProcessorService.run();
+        metricsProcessorService.run();
     }
 }
