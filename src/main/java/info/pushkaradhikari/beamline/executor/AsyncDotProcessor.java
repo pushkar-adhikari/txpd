@@ -18,7 +18,6 @@ import org.influxdb.dto.Point;
 import beamline.graphviz.Dot;
 import guru.nidi.graphviz.engine.Format;
 import guru.nidi.graphviz.engine.Graphviz;
-import guru.nidi.graphviz.engine.GraphvizV8Engine;
 import info.pushkaradhikari.beamline.custom.MultiProcessMap;
 import info.pushkaradhikari.beamline.custom.dot.TxDotModel;
 import info.pushkaradhikari.txpd.core.business.config.TXPDProperties;
@@ -43,7 +42,6 @@ public class AsyncDotProcessor extends RichAsyncFunction<MultiProcessMap, Void> 
     	InfluxConfig config = txpdProperties.getInfluxConfig();
         influxDB = InfluxDBFactory.connect(config.getUrl(), config.getUsername(), config.getPassword())
                  .setDatabase(config.getDatabase());
-        Graphviz.useEngine(new GraphvizV8Engine());
     }
     
     @Override

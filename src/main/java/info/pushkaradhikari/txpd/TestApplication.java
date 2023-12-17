@@ -37,7 +37,6 @@ public class TestApplication {
 		// 		e.printStackTrace();
 		// 	}
 		// });
-		Graphviz.useEngine(new GraphvizV8Engine());
 		processMapToSVG();
 	}
 
