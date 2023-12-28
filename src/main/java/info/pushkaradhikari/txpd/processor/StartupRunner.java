@@ -4,6 +4,7 @@ import javax.annotation.PostConstruct;
 
 import org.springframework.stereotype.Component;
 
+import info.pushkaradhikari.txpd.TXPDApplication;
 import info.pushkaradhikari.txpd.processor.service.InitiatorService;
 import info.pushkaradhikari.txpd.processor.service.MetricsProcessorService;
 
@@ -22,7 +23,9 @@ public class StartupRunner {
 
     @PostConstruct
     public void startServices() throws Exception {
-        initiatorService.run();
-        metricsProcessorService.run();
+        if (TXPDApplication.runInDefaultMode) {
+            initiatorService.run();
+            metricsProcessorService.run();
+        }
     }
 }

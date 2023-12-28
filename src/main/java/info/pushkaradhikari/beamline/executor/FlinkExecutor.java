@@ -1,5 +1,6 @@
 package info.pushkaradhikari.beamline.executor;
 
+import java.io.File;
 import java.io.Serializable;
 import java.util.concurrent.TimeUnit;
 
@@ -25,6 +26,7 @@ public class FlinkExecutor implements Serializable {
 	private static final long serialVersionUID = 1L;
 	
 	public void run(TXPDProperties txpdProperties, BeamlineAbstractSource source) throws Exception {
+		new File(txpdProperties.getResult().getLocation()).mkdirs();
 		log.info("Starting FlinkExecutor...");
 		
 		final int parallelism = 1;

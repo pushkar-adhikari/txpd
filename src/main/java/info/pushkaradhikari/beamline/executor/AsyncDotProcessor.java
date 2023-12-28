@@ -63,10 +63,11 @@ public class AsyncDotProcessor extends RichAsyncFunction<MultiProcessMap, Void> 
     }
     
     private void writeSvgToInfluxDB(TxDotModel dot, String svg) {
-    	String measurement = dot.isCaseSpecific() ? "process_svg" : "execution_svg";
+    	String measurement = "process_svg";
     	Map<String, String> tags = new HashMap<>();
         tags.put("processName", dot.getModel().getProcessName());
         if (dot.isCaseSpecific()) {
+            measurement = "execution_svg";
             tags.put("packageLogId", dot.getCaseId());
         }
         Map<String, Object> fields = new HashMap<>();

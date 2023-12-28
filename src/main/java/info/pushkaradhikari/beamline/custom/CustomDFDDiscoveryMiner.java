@@ -23,6 +23,14 @@ public class CustomDFDDiscoveryMiner extends StreamMiningAlgorithm<MultiProcessM
 	@Override
 	public MultiProcessMap ingest(BEvent event) {
 		String processName = event.getProcessName();
+		if (processName.contentEquals("unnamed-xes-process")) {
+			// Fix for unnamed processes while using XESLogSource
+			String projectName = (String) event.getEventAttributes().get("project:name");
+			String packageName = (String) event.getEventAttributes().get("package:name");
+			if (projectName != null && packageName != null) {
+				processName = projectName + "_" + packageName;
+			}
+		}
 		String caseID = event.getTraceName();
 		Miner miner = miners.computeIfAbsent(caseID, k -> {
 			return new Miner();

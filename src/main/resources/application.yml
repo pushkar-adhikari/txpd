@@ -8,10 +8,6 @@ spring:
 server:
   port: 8001
   
-springdoc:
-  packages-to-scan: info.pushkaradhikari
-  paths-to-match: /**
-
 logging:
   level:
     root: INFO
@@ -21,7 +17,7 @@ logging:
 
 txpd:
   result:
-    location: /Users/pushkaradhikari/studies/thesis/txpd/output/
+    location: ./output/
     enabled: true
   kafka-config:
     bootstrap-servers: localhost:9092
