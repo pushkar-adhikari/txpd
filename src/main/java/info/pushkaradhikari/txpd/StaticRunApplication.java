@@ -22,9 +22,13 @@ public class StaticRunApplication {
     private static String out_folder = "./output/";
 
     public static void main(String[] args) throws Exception {
-        String filename = args[0];
-        in_folder = args[1];
-        out_folder = args[2];
+        if (args.length != 4) {
+            log.error("Usage: java -jar ./txpd.jar static <filename.xes> <input_folder_path> <output_folder_path>");
+            System.exit(1);
+        }
+        String filename = args[1];
+        in_folder = args[2];
+        out_folder = args[3];
         new File(out_folder).mkdirs();
         log.info("Starting...");
         run(filename);
@@ -47,7 +51,7 @@ public class StaticRunApplication {
                 .flatMap(miner)
                 .addSink(new SinkFunction<MultiProcessMap>() {
                     public void invoke(MultiProcessMap value, Context context) throws Exception {
-                        Map<String,TxDotModel> dots = value.getDots();
+                        Map<String, TxDotModel> dots = value.getDots();
                         for (Map.Entry<String, TxDotModel> entry : dots.entrySet()) {
                             String processName = entry.getKey();
                             TxDotModel dot = entry.getValue();

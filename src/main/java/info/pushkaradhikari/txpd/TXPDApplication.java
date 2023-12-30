@@ -16,14 +16,9 @@ public class TXPDApplication {
     public static boolean runInDefaultMode = true;
 
     public static void main(String[] args) throws Exception {
-        if (args.length > 0) {
+        if (args.length > 0 && args[0].equals("static")) {
             runInDefaultMode = false;
-            if (args.length != 3) {
-                log.error("Usage: java -jar ./txpd.jar <filename.xes> <input_folder_path> <output_folder_path>");
-                System.exit(1);
-            } else {
-                StaticRunApplication.main(args);
-            }
+            StaticRunApplication.main(args);
         } else {
             log.info("Starting TXPDApplication with default configuration...");
             SpringApplication.run(TXPDApplication.class, args);

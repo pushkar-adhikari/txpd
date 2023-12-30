@@ -30,84 +30,84 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 public class KafkaSource extends BeamlineAbstractSource implements CheckpointedFunction  {
 
-	private static final long serialVersionUID = 608025607423103621L;
+    private static final long serialVersionUID = 608025607423103621L;
 
-	private long offset = 0L; // offset of the last record consumed
-	private final String uuid;
-	private final TXPDProperties txpdProperties;
+    private long offset = 0L; // offset of the last record consumed
+    private final String uuid;
+    private final TXPDProperties txpdProperties;
 
-	public volatile boolean running = true;
-	private transient ListState<Long> offsetState;
-	private transient KafkaConsumer<String, JsonNode> consumer;
+    public volatile boolean running = true;
+    private transient ListState<Long> offsetState;
+    private transient KafkaConsumer<String, JsonNode> consumer;
 
-	public KafkaSource(TXPDProperties txpdProperties) {
-		this.txpdProperties = txpdProperties;
-		this.uuid = UUID.randomUUID().toString();
-	}
-
-	@Override
-    public void run(SourceContext<BEvent> ctx) throws Exception {
-		KafkaConfig kafkaConfig = txpdProperties.getKafkaConfig();
-		consumer = createKafkaConsumer(kafkaConfig);
-		log.info(uuid + " - Subscribing to topic: " + kafkaConfig.getTopic());
-		consumer.subscribe(Collections.singletonList(kafkaConfig.getTopic()));
-		try {
-			while (isRunning()) {
-				ConsumerRecords<String, JsonNode> records = consumer.poll(Duration.ofMillis(Long.MAX_VALUE));
-				log.info(uuid + " - Received " + records.count() + " records");
-				for (ConsumerRecord<String, JsonNode> record : records) {
-					BEvent event = extractEvent(record);
-					log.info(uuid + " - BEvent collected for process: " + event.getProcessName());
-					if (isRunning()) {
-						synchronized (ctx.getCheckpointLock()) {
-							ctx.collect(event);
-							offset = record.offset(); // Update the current offset
-						}
-					}
-				}
-			}
-		} finally {
-			consumer.close();
-		}
+    public KafkaSource(TXPDProperties txpdProperties) {
+        this.txpdProperties = txpdProperties;
+        this.uuid = UUID.randomUUID().toString();
     }
 
-	private KafkaConsumer<String, JsonNode> createKafkaConsumer(KafkaConfig kafkaConfig) {
-		Properties props = new Properties();
-		props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaConfig.getBootstrapServers());
+    @Override
+    public void run(SourceContext<BEvent> ctx) throws Exception {
+        KafkaConfig kafkaConfig = txpdProperties.getKafkaConfig();
+        consumer = createKafkaConsumer(kafkaConfig);
+        log.info(uuid + " - Subscribing to topic: " + kafkaConfig.getTopic());
+        consumer.subscribe(Collections.singletonList(kafkaConfig.getTopic()));
+        try {
+            while (isRunning()) {
+                ConsumerRecords<String, JsonNode> records = consumer.poll(Duration.ofMillis(Long.MAX_VALUE));
+                log.info(uuid + " - Received " + records.count() + " records");
+                for (ConsumerRecord<String, JsonNode> record : records) {
+                    BEvent event = extractEvent(record);
+                    log.info(uuid + " - BEvent collected for process: " + event.getProcessName());
+                    if (isRunning()) {
+                        synchronized (ctx.getCheckpointLock()) {
+                            ctx.collect(event);
+                            offset = record.offset(); // Update the current offset
+                        }
+                    }
+                }
+            }
+        } finally {
+            consumer.close();
+        }
+    }
+
+    private KafkaConsumer<String, JsonNode> createKafkaConsumer(KafkaConfig kafkaConfig) {
+        Properties props = new Properties();
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaConfig.getBootstrapServers());
         props.put(ConsumerConfig.GROUP_ID_CONFIG, kafkaConfig.getGroups().getMiner());
-		props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, kafkaConfig.getAutoOffsetReset());
-		props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, kafkaConfig.getMaxPollRecords());
+        props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, kafkaConfig.getMaxPollRecords());
         return new KafkaConsumer<>(props);
-	}
+    }
 
-	private BEvent extractEvent(ConsumerRecord<String, JsonNode> record) {
+    private BEvent extractEvent(ConsumerRecord<String, JsonNode> record) {
         try {
-			JsonNode jsonNode = record.value();
-			String projectName = jsonNode.get("ProjectName").asText();
-			String packageName = jsonNode.get("PackageName").asText();
-			String packageLogId = jsonNode.get("PackageLogId").asText();
-			String packageLogDetailName = jsonNode.get("PackageLogDetailName").asText();
-			//String packageLogDetailName = jsonNode.get("DetailStepAction").asText();
-			String processName = projectName + "_" + packageName;
-			BEvent event = new BEvent(processName, packageLogId, packageLogDetailName);
-			return event;
-		} catch (Exception e) {
-			log.error(uuid + " - Error JSON...", e);
-		}
+            JsonNode jsonNode = record.value();
+            String projectName = jsonNode.get("ProjectName").asText();
+            String packageName = jsonNode.get("PackageName").asText();
+            String packageLogId = jsonNode.get("PackageLogId").asText();
+            String packageLogDetailName = jsonNode.get("PackageLogDetailName").asText();
+            //String packageLogDetailName = jsonNode.get("DetailStepAction").asText();
+            String processName = projectName + "_" + packageName;
+            BEvent event = new BEvent(processName, packageLogId, packageLogDetailName);
+            return event;
+        } catch (Exception e) {
+            log.error(uuid + " - Error JSON...", e);
+        }
         return null; // should not happen
     }
 
-	@Override
-	public void cancel() {
-		running = false;
-		if (consumer != null) {
+    @Override
+    public void cancel() {
+        running = false;
+        if (consumer != null) {
             consumer.close();
         }
-	}
+    }
 
-	@Override
+    @Override
     public void snapshotState(FunctionSnapshotContext context) throws Exception {
         offsetState.clear();
         offsetState.add(offset);

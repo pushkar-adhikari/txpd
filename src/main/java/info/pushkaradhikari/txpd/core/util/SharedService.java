@@ -33,7 +33,7 @@ public class SharedService {
     }
     
     public void addMessage(JsonNode message) {
-    	messages.offer(message);
+        messages.offer(message);
     }
 
     public JsonNode getMessage() {
