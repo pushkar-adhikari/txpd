@@ -29,9 +29,9 @@ public class FlinkExecutor implements Serializable {
 		new File(txpdProperties.getResult().getLocation()).mkdirs();
 		log.info("Starting FlinkExecutor...");
 		
-		final int parallelism = 1;
+		final int parallelism = 15;
 		final Configuration configuration = new Configuration();
-		configuration.setInteger(TaskManagerOptions.NUM_TASK_SLOTS, 2);
+		configuration.setInteger(TaskManagerOptions.NUM_TASK_SLOTS, 16);
 		configuration.setInteger(RestOptions.PORT, 8082);
 		
 		StreamExecutionEnvironment env = StreamExecutionEnvironment.createLocalEnvironment(parallelism, configuration);
@@ -43,7 +43,7 @@ public class FlinkExecutor implements Serializable {
 		env.getCheckpointConfig().setTolerableCheckpointFailureNumber(1000);
 		
 		
-		DataStream<MultiProcessMap> dotsStream = env.setParallelism(1)
+		DataStream<MultiProcessMap> dotsStream = env.setParallelism(parallelism)
 			.addSource(source)
 			.keyBy(BEvent::getProcessName)
 			.flatMap(new CustomDFDDiscoveryMiner());

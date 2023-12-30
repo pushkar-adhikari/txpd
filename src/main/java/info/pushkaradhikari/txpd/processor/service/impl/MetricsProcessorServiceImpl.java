@@ -2,9 +2,18 @@ package info.pushkaradhikari.txpd.processor.service.impl;
 
 import static info.pushkaradhikari.txpd.core.util.TXPDUtil.toEpochMilli;
 
+import java.lang.management.ManagementFactory;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+
+import javax.annotation.PostConstruct;
+import javax.management.InstanceAlreadyExistsException;
+import javax.management.MBeanRegistrationException;
+import javax.management.MBeanServer;
+import javax.management.MalformedObjectNameException;
+import javax.management.NotCompliantMBeanException;
+import javax.management.ObjectName;
 
 import org.influxdb.InfluxDB;
 import org.influxdb.dto.Point;
@@ -17,15 +26,31 @@ import info.pushkaradhikari.txpd.core.business.annotation.TXPDService;
 import info.pushkaradhikari.txpd.core.mapper.JacksonObjectMapper;
 import info.pushkaradhikari.txpd.core.util.SharedService;
 import info.pushkaradhikari.txpd.processor.dto.EventDTO;
-import info.pushkaradhikari.txpd.processor.service.MetricsProcessorService;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @TXPDService("metricsProcessorService")
-public class MetricsProcessorServiceImpl implements MetricsProcessorService {
+public class MetricsProcessorServiceImpl implements MetricsProcessorServiceMXBean {
 
     private final SharedService sharedService;
     private final InfluxDB influxDB;
+
+    @Getter
+    int countOfTotalWrittenMetrics = 0;
+    @Getter
+    int countOfProcessedMessages = 0;
+    @Getter
+    int countOfWrittenPackageMetrics = 0;
+    @Getter
+    int countOfWrittenStepMetrics = 0;
+
+    @PostConstruct
+    public void init() throws MalformedObjectNameException, NotCompliantMBeanException, InstanceAlreadyExistsException, MBeanRegistrationException {
+        MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+        ObjectName name = new ObjectName("info.pushkaradhikari.txpd:type=metricsProcessorService");
+        mbs.registerMBean(this, name);
+    }
 
     public MetricsProcessorServiceImpl(
             SharedService sharedService,
@@ -66,6 +91,7 @@ public class MetricsProcessorServiceImpl implements MetricsProcessorService {
     }
 
     private void processEvent(EventDTO eventDTO) {
+        countOfProcessedMessages++;
         Map<String, String> tags = new HashMap<>();
         tags.put("packageId", eventDTO.getPackageId());
         tags.put("packageName", eventDTO.getPackageName());
@@ -90,6 +116,7 @@ public class MetricsProcessorServiceImpl implements MetricsProcessorService {
             fields.put("stepStatus", eventDTO.getPackageLogDetailEndStatus());
             
             writeMetric(measurement, tags, fields, stepEnd);
+            countOfWrittenStepMetrics++;
         }
     }
 
@@ -111,6 +138,7 @@ public class MetricsProcessorServiceImpl implements MetricsProcessorService {
             sharedService.removeProcess(eventDTO.getPackageLogId());
 
             writeMetric(measurement, tags, fields, processEnd);
+            countOfWrittenPackageMetrics++;
         }
     }
 
@@ -125,5 +153,6 @@ public class MetricsProcessorServiceImpl implements MetricsProcessorService {
         builder.time(time, TimeUnit.MILLISECONDS);
         Point point = builder.build();
         influxDB.write(point);
+        countOfTotalWrittenMetrics++;
     }
 }

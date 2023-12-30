@@ -70,15 +70,15 @@ public class TXPDProperties implements Serializable {
         @Getter
         @Setter
         public static class Groups implements Serializable {
-        	
-        	private static final long serialVersionUID = 1L;
-        	
-        	@NotBlank
+            
+            private static final long serialVersionUID = 1L;
+            
+            @NotBlank
             private String miner;
 
             @NotBlank
             private String processor;
-        	
+            
         }
     }
 

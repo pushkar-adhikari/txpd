@@ -1,0 +1,842 @@
+{
+    "annotations": {
+      "list": [
+        {
+          "builtIn": 1,
+          "datasource": {
+            "type": "grafana",
+            "uid": "-- Grafana --"
+          },
+          "enable": true,
+          "hide": true,
+          "iconColor": "rgba(0, 211, 255, 1)",
+          "name": "Annotations & Alerts",
+          "type": "dashboard"
+        }
+      ]
+    },
+    "editable": true,
+    "fiscalYearStartMonth": 0,
+    "graphTooltip": 0,
+    "id": 2,
+    "links": [],
+    "liveNow": false,
+    "panels": [
+      {
+        "datasource": {
+          "type": "influxdb",
+          "uid": "adeb9235-fec8-4a4f-bfd9-8ff94e7ed240"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "continuous-blues"
+            },
+            "custom": {
+              "axisBorderShow": false,
+              "axisCenteredZero": false,
+              "axisColorMode": "text",
+              "axisLabel": "Duration (s)",
+              "axisPlacement": "left",
+              "barAlignment": 0,
+              "drawStyle": "line",
+              "fillOpacity": 25,
+              "gradientMode": "none",
+              "hideFrom": {
+                "legend": false,
+                "tooltip": false,
+                "viz": false
+              },
+              "insertNulls": false,
+              "lineInterpolation": "linear",
+              "lineWidth": 1,
+              "pointSize": 5,
+              "scaleDistribution": {
+                "type": "linear"
+              },
+              "showPoints": "auto",
+              "spanNulls": false,
+              "stacking": {
+                "group": "A",
+                "mode": "normal"
+              },
+              "thresholdsStyle": {
+                "mode": "off"
+              }
+            },
+            "displayName": "Duration",
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                }
+              ]
+            },
+            "unit": "ms"
+          },
+          "overrides": [
+            {
+              "matcher": {
+                "id": "byName",
+                "options": "packageStatus"
+              },
+              "properties": [
+                {
+                  "id": "mappings",
+                  "value": [
+                    {
+                      "options": {
+                        "0": {
+                          "color": "green",
+                          "index": 0,
+                          "text": "Pass"
+                        },
+                        "1": {
+                          "color": "red",
+                          "index": 1,
+                          "text": "Fail"
+                        }
+                      },
+                      "type": "value"
+                    }
+                  ]
+                },
+                {
+                  "id": "custom.lineStyle",
+                  "value": {
+                    "dash": [
+                      0,
+                      10
+                    ],
+                    "fill": "dot"
+                  }
+                },
+                {
+                  "id": "displayName",
+                  "value": "Result"
+                },
+                {
+                  "id": "color",
+                  "value": {
+                    "mode": "palette-classic",
+                    "seriesBy": "min"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 0
+        },
+        "id": 2,
+        "options": {
+          "legend": {
+            "calcs": [],
+            "displayMode": "list",
+            "placement": "right",
+            "showLegend": false
+          },
+          "tooltip": {
+            "mode": "multi",
+            "sort": "none"
+          }
+        },
+        "targets": [
+          {
+            "datasource": {
+              "type": "influxdb",
+              "uid": "adeb9235-fec8-4a4f-bfd9-8ff94e7ed240"
+            },
+            "groupBy": [],
+            "orderByTime": "ASC",
+            "policy": "default",
+            "query": "SELECT \"packageDuration\", \"packageStatus\", \"packageLogStart\", \"packageLogEnd\", \"packageName\" FROM \"package\" WHERE \"projectName\" = '$project' AND \"packageName\" = '$package' AND $timeFilter",
+            "rawQuery": true,
+            "refId": "A",
+            "resultFormat": "table",
+            "select": [
+              [
+                {
+                  "params": [
+                    "value"
+                  ],
+                  "type": "field"
+                }
+              ]
+            ],
+            "tags": []
+          }
+        ],
+        "title": "Run History",
+        "transformations": [
+          {
+            "id": "convertFieldType",
+            "options": {
+              "conversions": [
+                {
+                  "destinationType": "time",
+                  "targetField": "packageLogStart"
+                },
+                {
+                  "destinationType": "time",
+                  "targetField": "packageLogEnd"
+                }
+              ],
+              "fields": {}
+            }
+          }
+        ],
+        "type": "timeseries"
+      },
+      {
+        "datasource": {
+          "type": "influxdb",
+          "uid": "adeb9235-fec8-4a4f-bfd9-8ff94e7ed240"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "custom": {
+              "align": "auto",
+              "cellOptions": {
+                "type": "auto"
+              },
+              "inspect": false
+            },
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                }
+              ]
+            }
+          },
+          "overrides": [
+            {
+              "matcher": {
+                "id": "byName",
+                "options": "packageLogStart"
+              },
+              "properties": [
+                {
+                  "id": "displayName",
+                  "value": "Execution Start"
+                },
+                {
+                  "id": "unit",
+                  "value": "dateTimeAsIso"
+                }
+              ]
+            },
+            {
+              "matcher": {
+                "id": "byName",
+                "options": "packageLogEnd"
+              },
+              "properties": [
+                {
+                  "id": "displayName",
+                  "value": "Execution End"
+                },
+                {
+                  "id": "unit",
+                  "value": "dateTimeAsIso"
+                }
+              ]
+            },
+            {
+              "matcher": {
+                "id": "byName",
+                "options": "packageDuration"
+              },
+              "properties": [
+                {
+                  "id": "displayName",
+                  "value": "Duration"
+                },
+                {
+                  "id": "unit",
+                  "value": "ms"
+                }
+              ]
+            },
+            {
+              "matcher": {
+                "id": "byName",
+                "options": "packageStatus"
+              },
+              "properties": [
+                {
+                  "id": "mappings",
+                  "value": [
+                    {
+                      "options": {
+                        "0": {
+                          "color": "green",
+                          "index": 0,
+                          "text": "Pass"
+                        },
+                        "1": {
+                          "color": "red",
+                          "index": 1,
+                          "text": "Fail"
+                        }
+                      },
+                      "type": "value"
+                    }
+                  ]
+                },
+                {
+                  "id": "displayName",
+                  "value": "Result"
+                }
+              ]
+            },
+            {
+              "matcher": {
+                "id": "byName",
+                "options": "Time"
+              },
+              "properties": [
+                {
+                  "id": "custom.hidden",
+                  "value": true
+                }
+              ]
+            }
+          ]
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 0
+        },
+        "id": 3,
+        "options": {
+          "cellHeight": "sm",
+          "footer": {
+            "countRows": false,
+            "fields": "",
+            "reducer": [
+              "sum"
+            ],
+            "show": false
+          },
+          "showHeader": true
+        },
+        "pluginVersion": "10.2.2",
+        "targets": [
+          {
+            "datasource": {
+              "type": "influxdb",
+              "uid": "adeb9235-fec8-4a4f-bfd9-8ff94e7ed240"
+            },
+            "groupBy": [],
+            "orderByTime": "ASC",
+            "policy": "default",
+            "query": "SELECT packageLogStart, packageLogEnd, \"packageDuration\", \"packageStatus\" FROM \"package\" WHERE \"projectName\" = '$project' AND \"packageName\" = '$package' AND $timeFilter",
+            "rawQuery": true,
+            "refId": "A",
+            "resultFormat": "table",
+            "select": [
+              [
+                {
+                  "params": [
+                    "value"
+                  ],
+                  "type": "field"
+                }
+              ]
+            ],
+            "tags": []
+          }
+        ],
+        "title": "Data for $project - $package",
+        "transformations": [
+          {
+            "id": "convertFieldType",
+            "options": {
+              "conversions": [],
+              "fields": {}
+            }
+          },
+          {
+            "id": "organize",
+            "options": {
+              "excludeByName": {
+                "packageName": true
+              },
+              "indexByName": {
+                "Time": 0,
+                "packageDuration": 3,
+                "packageLogEnd": 2,
+                "packageLogStart": 1,
+                "packageName": 5,
+                "packageStatus": 4
+              },
+              "renameByName": {}
+            }
+          }
+        ],
+        "type": "table"
+      },
+      {
+        "collapsed": false,
+        "gridPos": {
+          "h": 1,
+          "w": 24,
+          "x": 0,
+          "y": 8
+        },
+        "id": 5,
+        "panels": [],
+        "title": "Last execution details",
+        "type": "row"
+      },
+      {
+        "datasource": {
+          "type": "influxdb",
+          "uid": "adeb9235-fec8-4a4f-bfd9-8ff94e7ed240"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "custom": {
+              "align": "auto",
+              "cellOptions": {
+                "type": "auto"
+              },
+              "inspect": false
+            },
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          },
+          "overrides": [
+            {
+              "matcher": {
+                "id": "byName",
+                "options": "Last Run Start"
+              },
+              "properties": [
+                {
+                  "id": "unit",
+                  "value": "dateTimeAsSystem"
+                }
+              ]
+            }
+          ]
+        },
+        "gridPos": {
+          "h": 12,
+          "w": 12,
+          "x": 0,
+          "y": 9
+        },
+        "id": 4,
+        "options": {
+          "cellHeight": "sm",
+          "footer": {
+            "countRows": false,
+            "fields": "",
+            "reducer": [
+              "sum"
+            ],
+            "show": false
+          },
+          "showHeader": true,
+          "sortBy": [
+            {
+              "desc": true,
+              "displayName": "Last Run"
+            }
+          ]
+        },
+        "pluginVersion": "10.2.2",
+        "targets": [
+          {
+            "datasource": {
+              "type": "influxdb",
+              "uid": "adeb9235-fec8-4a4f-bfd9-8ff94e7ed240"
+            },
+            "groupBy": [
+              {
+                "params": [
+                  "packageId::tag"
+                ],
+                "type": "tag"
+              }
+            ],
+            "limit": "10",
+            "measurement": "package",
+            "orderByTime": "DESC",
+            "policy": "autogen",
+            "query": "SELECT \"projectName\" as \"Project Name\", \"packageName\" as \"Package Name\", \"packageLogId\" as \"Last Run Id\", \"packageLogStart\" as \"Last Run Start\" FROM \"package\" WHERE $timeFilter ORDER BY time DESC limit 10",
+            "rawQuery": true,
+            "refId": "A",
+            "resultFormat": "table",
+            "select": [
+              [
+                {
+                  "params": [
+                    "packageLogEnd"
+                  ],
+                  "type": "field"
+                },
+                {
+                  "params": [],
+                  "type": "last"
+                }
+              ]
+            ],
+            "tags": []
+          }
+        ],
+        "title": "Overall runs",
+        "transformations": [
+          {
+            "id": "organize",
+            "options": {
+              "excludeByName": {
+                "Last Run Id": true,
+                "Time": true,
+                "id": true,
+                "packageId": true,
+                "run id": true
+              },
+              "indexByName": {
+                "Time": 0,
+                "id": 2,
+                "last run": 6,
+                "name": 4,
+                "packageId": 1,
+                "project name": 3,
+                "run id": 5
+              },
+              "renameByName": {}
+            }
+          },
+          {
+            "id": "convertFieldType",
+            "options": {
+              "conversions": [],
+              "fields": {}
+            }
+          }
+        ],
+        "type": "table"
+      },
+      {
+        "datasource": {
+          "type": "influxdb",
+          "uid": "adeb9235-fec8-4a4f-bfd9-8ff94e7ed240"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "custom": {
+              "align": "auto",
+              "cellOptions": {
+                "type": "auto"
+              },
+              "inspect": false,
+              "width": 100
+            },
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          },
+          "overrides": [
+            {
+              "matcher": {
+                "id": "byName",
+                "options": "Step"
+              },
+              "properties": [
+                {
+                  "id": "custom.width"
+                }
+              ]
+            }
+          ]
+        },
+        "gridPos": {
+          "h": 12,
+          "w": 12,
+          "x": 12,
+          "y": 9
+        },
+        "id": 7,
+        "options": {
+          "cellHeight": "sm",
+          "footer": {
+            "countRows": false,
+            "fields": "",
+            "reducer": [
+              "sum"
+            ],
+            "show": false
+          },
+          "showHeader": true
+        },
+        "pluginVersion": "10.2.2",
+        "targets": [
+          {
+            "datasource": {
+              "type": "influxdb",
+              "uid": "adeb9235-fec8-4a4f-bfd9-8ff94e7ed240"
+            },
+            "query": "SELECT * from (SELECT COUNT(\"stepStatus\") as \"failedCount\" FROM \"package_step\" WHERE $timeFilter AND \"stepStatus\"=1 GROUP BY \"stepName\" ORDER BY time DESC) where \"failedCount\" > 1 ORDER BY time DESC",
+            "rawQuery": true,
+            "refId": "A",
+            "resultFormat": "table"
+          }
+        ],
+        "title": "Failed Steps counter (>1)",
+        "transformations": [
+          {
+            "id": "organize",
+            "options": {
+              "excludeByName": {
+                "Time": true
+              },
+              "indexByName": {
+                "Time": 0,
+                "failedCount": 2,
+                "stepName": 1
+              },
+              "renameByName": {
+                "failedCount": "Times failed",
+                "stepName": "Step"
+              }
+            }
+          }
+        ],
+        "type": "table"
+      },
+      {
+        "datasource": {
+          "type": "influxdb",
+          "uid": "adeb9235-fec8-4a4f-bfd9-8ff94e7ed240"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "custom": {
+              "align": "auto",
+              "cellOptions": {
+                "type": "auto"
+              },
+              "inspect": false,
+              "width": 150
+            },
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          },
+          "overrides": [
+            {
+              "matcher": {
+                "id": "byName",
+                "options": "Package Name"
+              },
+              "properties": [
+                {
+                  "id": "custom.width",
+                  "value": 250
+                }
+              ]
+            },
+            {
+              "matcher": {
+                "id": "byName",
+                "options": "Failed Step"
+              },
+              "properties": [
+                {
+                  "id": "custom.width"
+                }
+              ]
+            },
+            {
+              "matcher": {
+                "id": "byName",
+                "options": "Time"
+              },
+              "properties": [
+                {
+                  "id": "custom.width",
+                  "value": 200
+                }
+              ]
+            }
+          ]
+        },
+        "gridPos": {
+          "h": 12,
+          "w": 24,
+          "x": 0,
+          "y": 21
+        },
+        "id": 6,
+        "options": {
+          "cellHeight": "sm",
+          "footer": {
+            "countRows": false,
+            "fields": "",
+            "reducer": [
+              "sum"
+            ],
+            "show": false
+          },
+          "showHeader": true
+        },
+        "pluginVersion": "10.2.2",
+        "targets": [
+          {
+            "datasource": {
+              "type": "influxdb",
+              "uid": "adeb9235-fec8-4a4f-bfd9-8ff94e7ed240"
+            },
+            "query": "SELECT \"projectName\" as \"Project Name\", \"packageName\" as \"Package Name\", \"stepName\" as \"Failed Step\", stepStatus FROM \"package_step\" WHERE $timeFilter AND \"stepStatus\"=1 ORDER BY time DESC",
+            "rawQuery": true,
+            "refId": "A",
+            "resultFormat": "table"
+          }
+        ],
+        "title": "Last Failed Runs (with failed step)",
+        "transformations": [
+          {
+            "id": "organize",
+            "options": {
+              "excludeByName": {
+                "Last Run Id": false,
+                "Time": false,
+                "stepStatus": true
+              },
+              "indexByName": {},
+              "renameByName": {}
+            }
+          }
+        ],
+        "type": "table"
+      }
+    ],
+    "refresh": false,
+    "schemaVersion": 38,
+    "tags": [],
+    "templating": {
+      "list": [
+        {
+          "current": {
+            "selected": false,
+            "text": "DSA_ADK",
+            "value": "DSA_ADK"
+          },
+          "datasource": {
+            "type": "influxdb",
+            "uid": "adeb9235-fec8-4a4f-bfd9-8ff94e7ed240"
+          },
+          "definition": "SHOW TAG VALUES FROM \"package\" WITH KEY = \"projectName\"",
+          "hide": 0,
+          "includeAll": true,
+          "label": "Project",
+          "multi": false,
+          "name": "project",
+          "options": [],
+          "query": "SHOW TAG VALUES FROM \"package\" WITH KEY = \"projectName\"",
+          "refresh": 1,
+          "regex": "",
+          "skipUrlSync": false,
+          "sort": 0,
+          "type": "query"
+        },
+        {
+          "current": {
+            "selected": false,
+            "text": "ADK_5m",
+            "value": "ADK_5m"
+          },
+          "datasource": {
+            "type": "influxdb",
+            "uid": "adeb9235-fec8-4a4f-bfd9-8ff94e7ed240"
+          },
+          "definition": "SHOW TAG VALUES FROM \"package\" WITH KEY = \"packageName\" WHERE projectName='$project'",
+          "hide": 0,
+          "includeAll": true,
+          "label": "Package",
+          "multi": false,
+          "name": "package",
+          "options": [],
+          "query": "SHOW TAG VALUES FROM \"package\" WITH KEY = \"packageName\" WHERE projectName='$project'",
+          "refresh": 1,
+          "regex": "",
+          "skipUrlSync": false,
+          "sort": 0,
+          "type": "query"
+        }
+      ]
+    },
+    "time": {
+      "from": "2023-10-30T08:00:00.000Z",
+      "to": "2023-10-30T16:00:00.000Z"
+    },
+    "timepicker": {},
+    "timezone": "",
+    "title": "Simple Metrics",
+    "uid": "d7d5c029-af3e-4a5a-ad4d-dfe931a07437",
+    "version": 19,
+    "weekStart": ""
+  }

@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @EnableConfigurationProperties(TXPDProperties.class)
 public class TXPDAutoConfig {
-	
+    
     @Bean
     @ConditionalOnMissingBean(search = SearchStrategy.CURRENT)
     public TXPDProperties txpdProperties() {

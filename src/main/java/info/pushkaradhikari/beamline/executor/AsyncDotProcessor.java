@@ -1,12 +1,21 @@
 package info.pushkaradhikari.beamline.executor;
 
 import java.io.File;
+import java.lang.management.ManagementFactory;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+
+import javax.annotation.PostConstruct;
+import javax.management.InstanceAlreadyExistsException;
+import javax.management.MBeanRegistrationException;
+import javax.management.MBeanServer;
+import javax.management.MalformedObjectNameException;
+import javax.management.NotCompliantMBeanException;
+import javax.management.ObjectName;
 
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.functions.async.ResultFuture;
@@ -22,15 +31,28 @@ import info.pushkaradhikari.beamline.custom.MultiProcessMap;
 import info.pushkaradhikari.beamline.custom.dot.TxDotModel;
 import info.pushkaradhikari.txpd.core.business.config.TXPDProperties;
 import info.pushkaradhikari.txpd.core.business.config.TXPDProperties.InfluxConfig;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class AsyncDotProcessor extends RichAsyncFunction<MultiProcessMap, Void>  {
-	
-	private static final long serialVersionUID = -6445251845896376578L;
-	private transient InfluxDB influxDB;
-	private transient boolean writeResults;
+public class AsyncDotProcessor extends RichAsyncFunction<MultiProcessMap, Void> implements AsyncDotProcessorMXBean  {
+    
+    private static final long serialVersionUID = -6445251845896376578L;
+    private transient InfluxDB influxDB;
+    private transient boolean writeResults;
     private final TXPDProperties txpdProperties;
+
+    @Getter
+    int countOfTotalModelsWrittenToInflux;
+    @Getter
+    int countOfTotalExportedModels;
+
+    @PostConstruct
+    public void init() throws MalformedObjectNameException, NotCompliantMBeanException, InstanceAlreadyExistsException, MBeanRegistrationException {
+        MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+        ObjectName name = new ObjectName("info.pushkaradhikari.txpd:type=asyncDotProcessor");
+        mbs.registerMBean(this, name);
+    }
     
     public AsyncDotProcessor(TXPDProperties txpdProperties) {
         this.txpdProperties = txpdProperties;
@@ -38,19 +60,20 @@ public class AsyncDotProcessor extends RichAsyncFunction<MultiProcessMap, Void> 
     
     @Override
     public void open(Configuration parameters) throws Exception {
-    	writeResults = txpdProperties.getResult().isEnabled();
-    	InfluxConfig config = txpdProperties.getInfluxConfig();
+        writeResults = txpdProperties.getResult().isEnabled();
+        InfluxConfig config = txpdProperties.getInfluxConfig();
         influxDB = InfluxDBFactory.connect(config.getUrl(), config.getUsername(), config.getPassword())
                  .setDatabase(config.getDatabase());
     }
     
     @Override
     public void asyncInvoke(MultiProcessMap map, ResultFuture<Void> resultFuture) {
-    	Map<String, TxDotModel> dots = map.getDots();
-    	String uuid = UUID.randomUUID().toString();
-    	log.info(uuid + " async invoked, rendering maps for {} processes", dots.keySet().size());
-    	for (Map.Entry<String, TxDotModel> entry : dots.entrySet()) {
-    		CompletableFuture.runAsync(() -> {
+        Map<String, TxDotModel> dots = map.getDots();
+        String uuid = UUID.randomUUID().toString();
+        log.info(uuid + " async invoked, rendering maps for {} processes", dots.keySet().size());
+        for (Map.Entry<String, TxDotModel> entry : dots.entrySet()) {
+            countOfTotalExportedModels++;
+            CompletableFuture.runAsync(() -> {
                 String name = entry.getKey();
                 TxDotModel dot = entry.getValue();
                 log.info(uuid + " Starting SVG generation for process: {}", name);
@@ -58,13 +81,13 @@ public class AsyncDotProcessor extends RichAsyncFunction<MultiProcessMap, Void> 
                 log.info(uuid + " SVG generation complete for process {}", name);
                 exportToSVG(dot, name, uuid);
                 writeSvgToInfluxDB(dot, svg);
-        	}).thenRun(() -> resultFuture.complete(Collections.emptyList()));
-    	}
+            }).thenRun(() -> resultFuture.complete(Collections.emptyList()));
+        }
     }
     
     private void writeSvgToInfluxDB(TxDotModel dot, String svg) {
-    	String measurement = "process_svg";
-    	Map<String, String> tags = new HashMap<>();
+        String measurement = "process_svg";
+        Map<String, String> tags = new HashMap<>();
         tags.put("processName", dot.getModel().getProcessName());
         if (dot.isCaseSpecific()) {
             measurement = "execution_svg";
@@ -82,16 +105,17 @@ public class AsyncDotProcessor extends RichAsyncFunction<MultiProcessMap, Void> 
             .build();
 
         influxDB.write(point);
+        countOfTotalModelsWrittenToInflux++;
     }
     
     private void exportToSVG(Dot dot, String name, String uuid) {
-    	if (writeResults) {    		
-    		try {                	
-    			dot.exportToSvg(new File(txpdProperties.getResult().getLocation() + name + ".svg"));
-    		} catch (Exception e) {
-    			log.error(uuid + " Error writing svg to file!", e);
-    		}
-    	}
+        if (writeResults) {    		
+            try {                	
+                dot.exportToSvg(new File(txpdProperties.getResult().getLocation() + name + ".svg"));
+            } catch (Exception e) {
+                log.error(uuid + " Error writing svg to file!", e);
+            }
+        }
     }
     
     @Override
@@ -100,5 +124,4 @@ public class AsyncDotProcessor extends RichAsyncFunction<MultiProcessMap, Void> 
             influxDB.close();
         }
     }
-
 }

@@ -1,0 +1,165 @@
+{
+    "annotations": {
+      "list": [
+        {
+          "builtIn": 1,
+          "datasource": {
+            "type": "grafana",
+            "uid": "-- Grafana --"
+          },
+          "enable": true,
+          "hide": true,
+          "iconColor": "rgba(0, 211, 255, 1)",
+          "name": "Annotations & Alerts",
+          "type": "dashboard"
+        }
+      ]
+    },
+    "editable": true,
+    "fiscalYearStartMonth": 0,
+    "graphTooltip": 0,
+    "id": 5,
+    "links": [],
+    "liveNow": false,
+    "panels": [
+      {
+        "datasource": {
+          "type": "influxdb",
+          "uid": "adeb9235-fec8-4a4f-bfd9-8ff94e7ed240"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          },
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 10,
+          "w": 6,
+          "x": 0,
+          "y": 0
+        },
+        "id": 1,
+        "maxPerRow": 4,
+        "options": {
+          "SVGBaseFix": true,
+          "add100Percentage": true,
+          "calcsMutation": "standard",
+          "centerAlignContent": true,
+          "codeData": "{\n  \"text\": \"Random text\"\n}",
+          "css": ".container {\n  height: 100%;\n  margin: 0;\n  box-sizing: border-box;\n  display: flex;\n  width: 100%;\n}\n\n.box {\n  height: 100%;\n  margin: 0;\n  display: flex;\n  width: 100%;\n}\n\n.box svg {\n  flex: 1;\n  height: auto;\n}",
+          "dynamicData": false,
+          "dynamicFieldDisplayValues": false,
+          "dynamicHtmlGraphics": true,
+          "dynamicProps": false,
+          "html": "<div class=\"container\">\n  <div class=\"box\" id=\"htmlgraphics-value\">\n  </div>\n</div>",
+          "onInit": "",
+          "onInitOnResize": false,
+          "onRender": "// Sets the value from the first series on every refresh\nconst htmlgraphicsValue = htmlNode.getElementById('htmlgraphics-value');\n\nif (htmlgraphicsValue) {\n  const valueField = data.series[0]?.fields[1];\n  if (valueField) {\n    const length = valueField.values.length;\n    htmlgraphicsValue.innerHTML = valueField.values.get(length - 1);\n\n    // Wait for the browser to parse the inserted SVG\n    setTimeout(() => {\n      const svgElement = htmlgraphicsValue.querySelector('svg');\n      if (svgElement) {\n        // Set the viewBox attribute if it's not already set\n        if (!svgElement.hasAttribute('viewBox')) {\n          const bbox = svgElement.getBBox();\n          svgElement.setAttribute('viewBox', `${bbox.x} ${bbox.y} ${bbox.width} ${bbox.height}`);\n        }\n\n        // Set up zoom functionality\n        setupZoom(svgElement);\n      }\n    }, 50);\n  } else {\n    htmlgraphicsValue.textContent = \"No data\"\n  }\n}\n\nfunction setupZoom(svgCanvas) {\n  var viewPort = svgCanvas.getElementById(\"graph0\");\n\n  var drag = false;\n  var offset = {\n    x: 0,\n    y: 0\n  };\n  var factor = .01;\n  var matrix = new DOMMatrix();\n\n  svgCanvas.addEventListener('pointerdown', function (event) {\n    drag = true;\n    offset = {\n      x: event.offsetX,\n      y: event.offsetY\n    };\n  });\n\n  svgCanvas.addEventListener('pointermove', function (event) {\n    if (drag) {\n      var tx = event.offsetX - offset.x;\n      var ty = event.offsetY - offset.y;\n      offset = {\n        x: event.offsetX,\n        y: event.offsetY\n      };\n      matrix.preMultiplySelf(new DOMMatrix()\n        .translateSelf(tx, ty));\n      viewPort.style.transform = matrix.toString();\n    }\n  });\n\n  svgCanvas.addEventListener('pointerup', function (event) {\n    drag = false;\n  });\n\n  svgCanvas.addEventListener('wheel', function (event) {\n    var zoom = event.deltaY > 0 ? -1 : 1;\n    var scale = 1 + factor * zoom;\n    offset = {\n      x: event.offsetX,\n      y: event.offsetY\n    };\n    matrix.preMultiplySelf(new DOMMatrix()\n      .translateSelf(offset.x, offset.y)\n      .scaleSelf(scale, scale)\n      .translateSelf(-offset.x, -offset.y));\n    viewPort.style.transform = matrix.toString();\n  });\n}",
+          "overflow": "visible",
+          "panelupdateOnMount": true,
+          "reduceOptions": {
+            "calcs": [
+              "lastNotNull",
+              "last",
+              "firstNotNull",
+              "first",
+              "min",
+              "max",
+              "mean",
+              "sum",
+              "count",
+              "range",
+              "delta",
+              "step",
+              "diff",
+              "logmin",
+              "allIsZero",
+              "allIsNull",
+              "diffperc"
+            ]
+          },
+          "renderOnMount": true,
+          "rootCSS": "",
+          "useGrafanaScrollbar": false
+        },
+        "repeat": "processName",
+        "repeatDirection": "h",
+        "targets": [
+          {
+            "datasource": {
+              "type": "influxdb",
+              "uid": "adeb9235-fec8-4a4f-bfd9-8ff94e7ed240"
+            },
+            "query": "select svg from process_svg where time=0 and processName='${processName:pipe}'",
+            "rawQuery": true,
+            "refId": "A",
+            "resultFormat": "table"
+          }
+        ],
+        "title": "${processName}",
+        "type": "gapit-htmlgraphics-panel"
+      }
+    ],
+    "refresh": "10s",
+    "schemaVersion": 38,
+    "tags": [],
+    "templating": {
+      "list": [
+        {
+          "current": {
+            "selected": true,
+            "text": [
+              "All"
+            ],
+            "value": [
+              "$__all"
+            ]
+          },
+          "datasource": {
+            "type": "influxdb",
+            "uid": "adeb9235-fec8-4a4f-bfd9-8ff94e7ed240"
+          },
+          "definition": "SHOW TAG VALUES FROM process_svg with key = \"processName\"",
+          "hide": 0,
+          "includeAll": true,
+          "label": "Name",
+          "multi": true,
+          "name": "processName",
+          "options": [],
+          "query": "SHOW TAG VALUES FROM process_svg with key = \"processName\"",
+          "refresh": 1,
+          "regex": "",
+          "skipUrlSync": false,
+          "sort": 1,
+          "type": "query"
+        }
+      ]
+    },
+    "time": {
+      "from": "2023-10-28T15:00:00.000Z",
+      "to": "2023-10-28T15:59:59.000Z"
+    },
+    "timepicker": {},
+    "timezone": "",
+    "title": "Process Status (live)",
+    "uid": "ff733b0f-fe2b-4ecf-a4ce-063f39f1eaef",
+    "version": 6,
+    "weekStart": ""
+  }
