@@ -1,10 +1,13 @@
 package info.pushkaradhikari.beamline.source;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Properties;
 import java.util.UUID;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.flink.api.common.state.ListState;
 import org.apache.flink.api.common.state.ListStateDescriptor;
 import org.apache.flink.runtime.state.FunctionInitializationContext;
@@ -86,12 +89,18 @@ public class KafkaSource extends BeamlineAbstractSource implements CheckpointedF
         try {
             JsonNode jsonNode = record.value();
             String projectName = jsonNode.get("ProjectName").asText();
+            String projectId = jsonNode.get("ProjectId").asText();
             String packageName = jsonNode.get("PackageName").asText();
+            String packageId = jsonNode.get("PackageId").asText();
             String packageLogId = jsonNode.get("PackageLogId").asText();
             String packageLogDetailName = jsonNode.get("PackageLogDetailName").asText();
-            //String packageLogDetailName = jsonNode.get("DetailStepAction").asText();
-            String processName = projectName + "_" + packageName;
-            BEvent event = new BEvent(processName, packageLogId, packageLogDetailName);
+            List<Pair<String, String>> eventAttributes = new ArrayList<>();
+            eventAttributes.add(Pair.of("projectId", projectId));
+            eventAttributes.add(Pair.of("projectName", projectName));
+            eventAttributes.add(Pair.of("packageId", packageId));
+            eventAttributes.add(Pair.of("packageName", packageName));
+            String processName = projectName + ":" + packageName;
+            BEvent event = new BEvent(processName, packageLogId, packageLogDetailName, null, eventAttributes);
             return event;
         } catch (Exception e) {
             log.error(uuid + " - Error JSON...", e);

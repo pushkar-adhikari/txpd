@@ -1,5 +1,6 @@
 package info.pushkaradhikari.beamline.custom;
 
+import java.io.Serializable;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -11,6 +12,8 @@ import org.apache.commons.lang3.tuple.Pair;
 import beamline.models.responses.GraphvizResponse;
 import info.pushkaradhikari.beamline.custom.dot.TXColorPalette.Colors;
 import info.pushkaradhikari.beamline.custom.dot.TxDotModel;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -22,6 +25,16 @@ public class ProcessMap extends GraphvizResponse {
     private Set<String> startingActivities;
     private Set<String> endingActivities;
     final String processName;
+    @Getter
+    @Setter
+    String projectId;
+    @Getter
+    final String projectName;
+    @Getter
+    @Setter
+    String packageId;
+    @Getter
+    final String packageName;
 
     @Override
     public TxDotModel generateDot() {
@@ -34,6 +47,13 @@ public class ProcessMap extends GraphvizResponse {
         this.startingActivities = new LinkedHashSet<>();
         this.endingActivities = new LinkedHashSet<>();
         this.processName = processName;
+        this.projectName = processName.split(":")[0];
+        this.packageName = processName.split(":")[1];
+    }
+
+    public void setMetaInfo(Map<String, Serializable> eventAttributes) {
+        this.projectId = eventAttributes.get("projectId").toString();
+        this.packageId = eventAttributes.get("packageId").toString();
     }
 
     public void addActivity(String activityName, Double relativeFrequency, Double absoluteFrequency) {

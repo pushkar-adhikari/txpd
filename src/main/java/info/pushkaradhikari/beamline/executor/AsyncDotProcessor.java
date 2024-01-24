@@ -65,7 +65,7 @@ public class AsyncDotProcessor extends RichAsyncFunction<MultiProcessMap, Void> 
     private void writeSvgToInfluxDB(TxDotModel dot, String svg) {
         String measurement = "process_svg";
         Map<String, String> tags = new HashMap<>();
-        tags.put("processName", dot.getModel().getProcessName());
+        setTags(dot, tags);
         if (dot.isCaseSpecific()) {
             measurement = "execution_svg";
             tags.put("packageLogId", dot.getCaseId());
@@ -83,11 +83,19 @@ public class AsyncDotProcessor extends RichAsyncFunction<MultiProcessMap, Void> 
 
         influxDB.write(point);
     }
+
+    private void setTags(TxDotModel dot, Map<String, String> tags) {
+        tags.put("processName", dot.getModel().getProcessName());
+        tags.put("packageName", dot.getModel().getPackageName());
+        tags.put("projectName", dot.getModel().getProjectName());
+        tags.put("projectId", dot.getModel().getProjectId());
+        tags.put("packageId", dot.getModel().getPackageId());
+    }
     
     private void exportToSVG(Dot dot, String name, String uuid) {
         if (writeResults) {    		
             try {                	
-                dot.exportToSvg(new File(txpdProperties.getResult().getLocation() + name + ".svg"));
+                dot.exportToSvg(new File(txpdProperties.getResult().getLocation() + name.replace(":", "_") + ".svg"));
             } catch (Exception e) {
                 log.error(uuid + " Error writing svg to file!", e);
             }

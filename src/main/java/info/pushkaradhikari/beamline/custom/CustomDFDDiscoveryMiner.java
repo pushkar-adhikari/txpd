@@ -28,7 +28,7 @@ public class CustomDFDDiscoveryMiner extends StreamMiningAlgorithm<MultiProcessM
             String projectName = (String) event.getEventAttributes().get("project:name");
             String packageName = (String) event.getEventAttributes().get("package:name");
             if (projectName != null && packageName != null) {
-                processName = projectName + "_" + packageName;
+                processName = projectName + ":" + packageName;
             }
         }
         String caseID = event.getTraceName();
@@ -36,6 +36,7 @@ public class CustomDFDDiscoveryMiner extends StreamMiningAlgorithm<MultiProcessM
             return new Miner();
         });
         ProcessMap individualMap = multiProcessMap.getIndividualProcessMap(processName, caseID);
+        individualMap.setMetaInfo(event.getEventAttributes());
         individualMap = miner.ingest(event, individualMap);
         if (individualMap != null) {
             multiProcessMap.addProcessMap(processName, caseID, individualMap);

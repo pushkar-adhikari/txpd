@@ -92,6 +92,10 @@ public class MultiProcessMap extends Response {
             double relativeFreq = freq / maxRelationFreqResult;
             compositeMap.addRelation(relation.getLeft(), relation.getRight(), relativeFreq, freq);
         });
+        maps.stream().findFirst().ifPresent(map -> {
+            compositeMap.setProjectId(map.getProjectId());
+            compositeMap.setPackageId(map.getPackageId());
+        });
         return compositeMap;
     }
 
