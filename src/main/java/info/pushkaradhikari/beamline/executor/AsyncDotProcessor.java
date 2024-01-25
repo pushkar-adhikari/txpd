@@ -54,7 +54,6 @@ public class AsyncDotProcessor extends RichAsyncFunction<MultiProcessMap, Void> 
             CompletableFuture.runAsync(() -> {
                 String name = entry.getKey();
                 TxDotModel dot = entry.getValue();
-                log.info(uuid + " Starting SVG generation for process: {}", name);
                 String svg = Graphviz.fromString(dot.toString()).render(Format.SVG).toString();
                 log.info(uuid + " SVG generation complete for process {}", name);
                 exportToSVG(dot, name, uuid);
@@ -83,7 +82,6 @@ public class AsyncDotProcessor extends RichAsyncFunction<MultiProcessMap, Void> 
                 .build();
 
         influxDB.write(point);
-        log.info(measurement + " written to influxdb.");
     }
 
     private void setTags(TxDotModel dot, Map<String, String> tags) {

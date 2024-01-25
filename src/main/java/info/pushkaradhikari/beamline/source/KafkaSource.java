@@ -60,7 +60,7 @@ public class KafkaSource extends BeamlineAbstractSource implements CheckpointedF
                 log.info(uuid + " - Received " + records.count() + " records");
                 for (ConsumerRecord<String, JsonNode> record : records) {
                     BEvent event = extractEvent(record);
-                    log.info(uuid + " - BEvent collected for process: " + event.getProcessName());
+                    log.info(uuid + " - Event collected for process: " + event.getProcessName());
                     if (isRunning()) {
                         synchronized (ctx.getCheckpointLock()) {
                             ctx.collect(event);
