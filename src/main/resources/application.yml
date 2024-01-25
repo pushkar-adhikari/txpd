@@ -19,6 +19,9 @@ txpd:
   result:
     location: ./output/
     enabled: true
+  model-config:
+    composite:
+      enabled: true
   kafka-config:
     bootstrap-servers: localhost:9092
     topic: log_replay

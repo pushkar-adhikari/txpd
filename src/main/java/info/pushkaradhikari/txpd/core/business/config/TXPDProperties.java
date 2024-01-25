@@ -24,6 +24,9 @@ public class TXPDProperties implements Serializable {
     private Result result;
 
     @Valid
+    private ModelConfig modelConfig;
+
+    @Valid
     private KafkaConfig kafkaConfig;
 
     @Valid
@@ -37,10 +40,27 @@ public class TXPDProperties implements Serializable {
 
         @NotBlank
         private String location;
-        
+
         private boolean enabled;
-        
-        
+    }
+
+    @Getter
+    @Setter
+    public static class ModelConfig implements Serializable {
+
+        private static final long serialVersionUID = 1L;
+
+        @Valid
+        private Composite composite;
+
+        @Getter
+        @Setter
+        public static class Composite implements Serializable {
+
+            private static final long serialVersionUID = 1L;
+
+            private boolean enabled;
+        }
     }
 
     @Getter
@@ -60,25 +80,24 @@ public class TXPDProperties implements Serializable {
 
         @NotBlank
         private String enableAutoCommit;
-        
+
         @Valid
         private Groups groups;
-        
+
         @NotNull
         private int maxPollRecords;
-        
+
         @Getter
         @Setter
         public static class Groups implements Serializable {
-            
+
             private static final long serialVersionUID = 1L;
-            
+
             @NotBlank
             private String miner;
 
             @NotBlank
             private String processor;
-            
         }
     }
 

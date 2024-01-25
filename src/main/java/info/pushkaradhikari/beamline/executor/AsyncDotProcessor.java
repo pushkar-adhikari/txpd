@@ -30,6 +30,7 @@ public class AsyncDotProcessor extends RichAsyncFunction<MultiProcessMap, Void> 
     private static final long serialVersionUID = -6445251845896376578L;
     private transient InfluxDB influxDB;
     private transient boolean writeResults;
+    private transient boolean writeCompositeModel;
     private final TXPDProperties txpdProperties;
 
     public AsyncDotProcessor(TXPDProperties txpdProperties) {
@@ -39,6 +40,7 @@ public class AsyncDotProcessor extends RichAsyncFunction<MultiProcessMap, Void> 
     @Override
     public void open(Configuration parameters) throws Exception {
         writeResults = txpdProperties.getResult().isEnabled();
+        writeCompositeModel = txpdProperties.getModelConfig().getComposite().isEnabled();
         log.info("Writing results to file: {}", writeResults);
         InfluxConfig config = txpdProperties.getInfluxConfig();
         influxDB = InfluxDBFactory.connect(config.getUrl(), config.getUsername(), config.getPassword())
@@ -69,6 +71,9 @@ public class AsyncDotProcessor extends RichAsyncFunction<MultiProcessMap, Void> 
         if (dot.isCaseSpecific()) {
             measurement = "execution_svg";
             tags.put("packageLogId", dot.getCaseId());
+        } else if (!writeCompositeModel) {
+            log.info("Skipping writing composite model to influxdb.");
+            return;
         }
         Map<String, Object> fields = new HashMap<>();
         fields.put("svg", svg);
