@@ -21,7 +21,7 @@ kafka_config = {
 }
 
 # Kafka topic
-topic = 'sample_topic'
+topic = 'log_replay'
 
 # Connect to the database
 def connect_db():
@@ -104,7 +104,7 @@ def produce_messages(producer, df):
 def timestamp_serializer(obj):
     """ Custom serializer for objects not serializable by default json code """
     if isinstance(obj, (datetime, Timestamp)):
-        return obj.isoformat()
+        return obj.strftime("%Y-%m-%d %H:%M:%S.%f")
     raise TypeError(f"Type {type(obj)} not serializable")
 
 # Main polling function
@@ -114,7 +114,7 @@ def poll_database():
         return
 
     producer = Producer(kafka_config)
-    last_processed_id = 0
+    last_processed_id = load_last_processed_id()
 
     while True:
         df = query_db(conn, last_processed_id)
@@ -123,11 +123,23 @@ def poll_database():
             new_last_id = produce_messages(producer, df)
             if new_last_id is not None:
                 last_processed_id = new_last_id
+                save_last_processed_id(last_processed_id)
         else:
             logging.info("No new records found.")
 
         logging.info("Sleeping for 15 seconds..")
         time.sleep(15)
+
+def save_last_processed_id(last_id):
+    with open('last_processed_id.txt', 'w') as file:
+        file.write(str(last_id))
+
+def load_last_processed_id():
+    try:
+        with open('last_processed_id.txt', 'r') as file:
+            return int(file.read().strip())
+    except FileNotFoundError:
+        return 0
 
 # Run the script
 if __name__ == "__main__":
