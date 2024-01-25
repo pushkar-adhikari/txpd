@@ -25,25 +25,26 @@ import info.pushkaradhikari.txpd.core.business.config.TXPDProperties.InfluxConfi
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class AsyncDotProcessor extends RichAsyncFunction<MultiProcessMap, Void>  {
-    
+public class AsyncDotProcessor extends RichAsyncFunction<MultiProcessMap, Void> {
+
     private static final long serialVersionUID = -6445251845896376578L;
     private transient InfluxDB influxDB;
     private transient boolean writeResults;
     private final TXPDProperties txpdProperties;
-    
+
     public AsyncDotProcessor(TXPDProperties txpdProperties) {
         this.txpdProperties = txpdProperties;
     }
-    
+
     @Override
     public void open(Configuration parameters) throws Exception {
         writeResults = txpdProperties.getResult().isEnabled();
+        log.info("Writing results to file: {}", writeResults);
         InfluxConfig config = txpdProperties.getInfluxConfig();
         influxDB = InfluxDBFactory.connect(config.getUrl(), config.getUsername(), config.getPassword())
-                 .setDatabase(config.getDatabase());
+                .setDatabase(config.getDatabase());
     }
-    
+
     @Override
     public void asyncInvoke(MultiProcessMap map, ResultFuture<Void> resultFuture) {
         Map<String, TxDotModel> dots = map.getDots();
@@ -61,7 +62,7 @@ public class AsyncDotProcessor extends RichAsyncFunction<MultiProcessMap, Void> 
             }).thenRun(() -> resultFuture.complete(Collections.emptyList()));
         }
     }
-    
+
     private void writeSvgToInfluxDB(TxDotModel dot, String svg) {
         String measurement = "process_svg";
         Map<String, String> tags = new HashMap<>();
@@ -74,14 +75,15 @@ public class AsyncDotProcessor extends RichAsyncFunction<MultiProcessMap, Void> 
         fields.put("svg", svg);
         fields.put("anchor", 1);
         long timestamp = 0;
-        
+
         Point point = Point.measurement(measurement)
-            .time(timestamp, TimeUnit.MILLISECONDS)
-            .tag(tags)
-            .fields(fields)
-            .build();
+                .time(timestamp, TimeUnit.MILLISECONDS)
+                .tag(tags)
+                .fields(fields)
+                .build();
 
         influxDB.write(point);
+        log.info(measurement + " written to influxdb.");
     }
 
     private void setTags(TxDotModel dot, Map<String, String> tags) {
@@ -91,17 +93,18 @@ public class AsyncDotProcessor extends RichAsyncFunction<MultiProcessMap, Void> 
         tags.put("projectId", dot.getModel().getProjectId());
         tags.put("packageId", dot.getModel().getPackageId());
     }
-    
+
     private void exportToSVG(Dot dot, String name, String uuid) {
-        if (writeResults) {    		
-            try {                	
+        if (writeResults) {
+            try {
+                log.info(uuid + " Writing svg to file for process: {}", name);
                 dot.exportToSvg(new File(txpdProperties.getResult().getLocation() + name.replace(":", "_") + ".svg"));
             } catch (Exception e) {
                 log.error(uuid + " Error writing svg to file!", e);
             }
         }
     }
-    
+
     @Override
     public void close() throws Exception {
         if (influxDB != null) {
