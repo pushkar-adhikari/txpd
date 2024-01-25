@@ -70,7 +70,7 @@ def query_db(conn, last_processed_id):
                             and [Projects].ValidTo = 99999999
                             and [ExecutionPackages].ValidTo = 99999999
                     )
-                    AND [ExecutionPackageLogs].[Start] > '2024-01-24 00:00:00.000'
+                    AND [ExecutionPackageLogs].[Start] > '2024-01-25 00:00:00.000'
                     AND [ExecutionPackageLogDetails].[End] is NOT null
                     AND [ExecutionPackageLogs].[End] is NOT null
                     AND [ExecutionPackageLogDetails].[ExecutionPackageLogDetailId] > {last_processed_id}
