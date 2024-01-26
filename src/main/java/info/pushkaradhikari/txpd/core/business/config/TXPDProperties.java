@@ -27,6 +27,9 @@ public class TXPDProperties implements Serializable {
     private ModelConfig modelConfig;
 
     @Valid
+    private FlinkConfig flinkConfig;
+
+    @Valid
     private KafkaConfig kafkaConfig;
 
     @Valid
@@ -42,6 +45,19 @@ public class TXPDProperties implements Serializable {
         private String location;
 
         private boolean enabled;
+    }
+
+    @Getter
+    @Setter
+    public static class FlinkConfig implements Serializable {
+
+        private static final long serialVersionUID = 1L;
+
+        @NotNull
+        private int asyncSlots;
+
+        @NotNull
+        private int parallelism;
     }
 
     @Getter

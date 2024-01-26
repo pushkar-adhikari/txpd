@@ -82,6 +82,7 @@ public class KafkaSource extends BeamlineAbstractSource implements CheckpointedF
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, kafkaConfig.getAutoOffsetReset());
         props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, kafkaConfig.getMaxPollRecords());
+        log.info("Flink kafka consumer max poll records: " + kafkaConfig.getMaxPollRecords());
         return new KafkaConsumer<>(props);
     }
 

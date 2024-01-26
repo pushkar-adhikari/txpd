@@ -29,9 +29,11 @@ public class FlinkExecutor implements Serializable {
 		new File(txpdProperties.getResult().getLocation()).mkdirs();
 		log.info("Starting FlinkExecutor...");
 		
-		final int parallelism = 15;
+		final int parallelism = txpdProperties.getFlinkConfig().getParallelism();
+		final int asyncSlots = txpdProperties.getFlinkConfig().getAsyncSlots();
+		log.info("FlinkExecutor configuration: Parallelism: {}, Async Slots: {}", parallelism, asyncSlots);
 		final Configuration configuration = new Configuration();
-		configuration.setInteger(TaskManagerOptions.NUM_TASK_SLOTS, 16);
+		configuration.setInteger(TaskManagerOptions.NUM_TASK_SLOTS, parallelism + asyncSlots);
 		configuration.setInteger(RestOptions.PORT, 8082);
 		
 		StreamExecutionEnvironment env = StreamExecutionEnvironment.createLocalEnvironment(parallelism, configuration);
@@ -52,7 +54,7 @@ public class FlinkExecutor implements Serializable {
 			dotsStream,
 	        new AsyncDotProcessor(txpdProperties),
 	        300000, TimeUnit.MILLISECONDS,
-	        15
+	        asyncSlots
 	    );
 
 		env.execute();

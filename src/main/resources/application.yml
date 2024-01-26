@@ -22,6 +22,9 @@ txpd:
   model-config:
     composite:
       enabled: true
+  flink-config:
+    async-slots: 15
+    parallelism: 1
   kafka-config:
     bootstrap-servers: localhost:9092
     topic: log_replay
