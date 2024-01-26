@@ -71,7 +71,6 @@ public class MetricsProcessorServiceImpl implements MetricsProcessorService {
         tags.put("packageName", eventDTO.getPackageName());
         tags.put("projectId", eventDTO.getProjectId());
         tags.put("projectName", eventDTO.getProjectName());
-        tags.put("packageLogId", eventDTO.getPackageLogId());
         processPackage(eventDTO, tags);
         processStep(eventDTO, tags);
     }
@@ -84,6 +83,8 @@ public class MetricsProcessorServiceImpl implements MetricsProcessorService {
             Map<String, Object> fields = new HashMap<>();
             long stepStart = toEpochMilli(eventDTO.getPackageLogDetailStart());
             long stepEnd = toEpochMilli(eventDTO.getPackageLogDetailEnd());
+            fields.put("packageLogId", eventDTO.getPackageLogId());
+            fields.put("packageLogDetailId", eventDTO.getPackageLogDetailId());
             fields.put("stepStart", stepStart);
             fields.put("stepEnd", stepEnd);
             fields.put("stepDuration", stepEnd - stepStart);
@@ -104,6 +105,7 @@ public class MetricsProcessorServiceImpl implements MetricsProcessorService {
             Map<String, Object> fields = new HashMap<>();
             long processStart = toEpochMilli(sharedService.getProcessStart(eventDTO.getPackageLogId()));
             long processEnd = toEpochMilli(eventDTO.getPackageLogEnd());
+            fields.put("packageLogId", eventDTO.getPackageLogId());
             fields.put("packageLogStart", processStart);
             fields.put("packageLogEnd", processEnd);
             fields.put("packageDuration", processEnd - processStart);

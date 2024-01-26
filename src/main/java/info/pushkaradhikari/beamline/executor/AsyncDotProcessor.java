@@ -66,16 +66,16 @@ public class AsyncDotProcessor extends RichAsyncFunction<MultiProcessMap, Void> 
 
     private void writeSvgToInfluxDB(TxDotModel dot, String svg) {
         String measurement = "process_svg";
-        Map<String, String> tags = new HashMap<>();
-        setTags(dot, tags);
+        Map<String, Object> fields = new HashMap<>();
         if (dot.isCaseSpecific()) {
             measurement = "execution_svg";
-            tags.put("packageLogId", dot.getCaseId());
+            fields.put("packageLogId", dot.getCaseId());
         } else if (!writeCompositeModel) {
             log.info("Skipping writing composite model to influxdb.");
             return;
         }
-        Map<String, Object> fields = new HashMap<>();
+        Map<String, String> tags = new HashMap<>();
+        setTags(dot, tags);
         fields.put("svg", svg);
         fields.put("anchor", 1);
         long timestamp = 0;
