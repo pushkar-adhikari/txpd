@@ -93,12 +93,14 @@ public class KafkaSource extends BeamlineAbstractSource implements CheckpointedF
             String packageName = jsonNode.get("PackageName").asText();
             String packageId = jsonNode.get("PackageId").asText();
             String packageLogId = jsonNode.get("PackageLogId").asText();
+            String packageLogEnd = jsonNode.get("PackageLogEnd").asText();
             String packageLogDetailName = jsonNode.get("PackageLogDetailName").asText();
             List<Pair<String, String>> eventAttributes = new ArrayList<>();
             eventAttributes.add(Pair.of("projectId", projectId));
             eventAttributes.add(Pair.of("projectName", projectName));
             eventAttributes.add(Pair.of("packageId", packageId));
             eventAttributes.add(Pair.of("packageName", packageName));
+            eventAttributes.add(Pair.of("packageLogEnd", packageLogEnd));
             String processName = projectName + ":" + packageName;
             BEvent event = new BEvent(processName, packageLogId, packageLogDetailName, null, eventAttributes);
             return event;

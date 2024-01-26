@@ -35,6 +35,9 @@ public class ProcessMap extends GraphvizResponse {
     String packageId;
     @Getter
     final String packageName;
+    @Getter
+    @Setter
+    String packageLogEnd;
 
     @Override
     public TxDotModel generateDot() {
@@ -54,6 +57,7 @@ public class ProcessMap extends GraphvizResponse {
     public void setMetaInfo(Map<String, Serializable> eventAttributes) {
         this.projectId = eventAttributes.get("projectId").toString();
         this.packageId = eventAttributes.get("packageId").toString();
+        this.packageLogEnd = eventAttributes.get("packageLogEnd").toString();
     }
 
     public void addActivity(String activityName, Double relativeFrequency, Double absoluteFrequency) {

@@ -1,7 +1,10 @@
 package info.pushkaradhikari.beamline.executor;
 
 import java.io.File;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -66,10 +69,12 @@ public class AsyncDotProcessor extends RichAsyncFunction<MultiProcessMap, Void> 
 
     private void writeSvgToInfluxDB(TxDotModel dot, String svg) {
         String measurement = "process_svg";
+        long timestamp = 0;
         Map<String, Object> fields = new HashMap<>();
         if (dot.isCaseSpecific()) {
             measurement = "execution_svg";
             fields.put("packageLogId", dot.getCaseId());
+            timestamp = toEpochMilli(dot.getModel().getPackageLogEnd());
         } else if (!writeCompositeModel) {
             log.info("Skipping writing composite model to influxdb.");
             return;
@@ -78,7 +83,6 @@ public class AsyncDotProcessor extends RichAsyncFunction<MultiProcessMap, Void> 
         setTags(dot, tags);
         fields.put("svg", svg);
         fields.put("anchor", 1);
-        long timestamp = 0;
 
         Point point = Point.measurement(measurement)
                 .time(timestamp, TimeUnit.MILLISECONDS)
@@ -114,4 +118,34 @@ public class AsyncDotProcessor extends RichAsyncFunction<MultiProcessMap, Void> 
             influxDB.close();
         }
     }
+
+    private long toEpochMilli(String dateTime) {
+		String baseFormat = "yyyy-MM-dd HH:mm:ss";
+		SimpleDateFormat baseDateFormat = new SimpleDateFormat(baseFormat);
+
+		try {
+			int dotIndex = dateTime.indexOf('.');
+			if (dotIndex != -1 && dotIndex < dateTime.length() - 1) {
+				String withoutFraction = dateTime.substring(0, dotIndex);
+				String fraction = dateTime.substring(dotIndex + 1);
+				Date parsedDate = baseDateFormat.parse(withoutFraction);
+				long time = parsedDate.getTime();
+
+				if (fraction.length() > 3) {
+					fraction = fraction.substring(0, 3); // Truncate to milliseconds
+				}
+				while (fraction.length() < 3) {
+					fraction += "0"; // Pad to three digits
+				}
+				long milliFraction = Integer.parseInt(fraction);
+				return time + milliFraction;
+			} else {
+				// No fractional seconds
+				return baseDateFormat.parse(dateTime).getTime();
+			}
+		} catch (ParseException e) {
+			log.error("Error converting datetime string: " + dateTime, e);
+		}
+		return 0;
+	}
 }
